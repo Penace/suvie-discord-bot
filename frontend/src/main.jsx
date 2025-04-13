@@ -10,8 +10,8 @@ import "./index.css";
 import Layout from "./pages/Layout";
 import Home from "./pages/Home";
 import Watchlist from "./pages/Watchlist";
-import Docs from "./pages/docs";
-import Ai from "./pages/ai";
+import Docs from "./pages/Docs";
+import Ai from "./pages/Ai";
 
 ReactDOM.createRoot(document.getElementById("root")).render(
   <React.StrictMode>
