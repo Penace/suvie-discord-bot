@@ -1,54 +1,50 @@
-// deploy-gh-pages.js
+// frontend/deploy-to-root.js
 import fs from "fs-extra";
 import path from "path";
-import { execSync } from "child_process";
+import { fileURLToPath } from "url";
+import { exec } from "child_process";
 
-const BUILD_CMD = "npm run build"; // should be run inside frontend/
-const FRONTEND_DIR = path.resolve("frontend");
-const DIST_DIR = path.join(FRONTEND_DIR, "dist");
-const TEMP_DIR = path.resolve(".temp-gh-pages");
-const GH_BRANCH = "gh-pages";
-const CNAME = "suvie.me";
+const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
-async function deploy() {
+const DIST_DIR = path.resolve(__dirname, "dist");
+const ROOT_DIR = path.resolve(__dirname, ".."); // suvie-bot root
+
+console.log("📦 Building site...");
+
+exec("npm run build", { cwd: __dirname }, async (err, stdout, stderr) => {
+  if (err) {
+    console.error("❌ Build failed:", stderr);
+    process.exit(1);
+  }
+
+  console.log("✅ Build complete.\n🧹 Cleaning old root deployment files...");
+
   try {
-    console.log("📦 Building the site...");
-    execSync(BUILD_CMD, { cwd: FRONTEND_DIR, stdio: "inherit" });
+    const whitelist = ["CNAME", "movies.json", ".nojekyll"];
+    const rootFiles = await fs.readdir(ROOT_DIR);
 
-    console.log("🚚 Preparing temporary directory...");
-    await fs.remove(TEMP_DIR);
-    await fs.copy(DIST_DIR, TEMP_DIR);
+    // Clean all old deployment files except whitelisted
+    for (const file of rootFiles) {
+      const filePath = path.join(ROOT_DIR, file);
+      if (
+        fs.lstatSync(filePath).isFile() &&
+        !whitelist.includes(file) &&
+        !file.endsWith(".py") && // don't delete backend
+        !file.endsWith(".env") && !file.endsWith(".md")
+      ) {
+        await fs.remove(filePath);
+      }
+    }
 
-    // Add .nojekyll and CNAME
-    fs.writeFileSync(path.join(TEMP_DIR, ".nojekyll"), "");
-    fs.writeFileSync(path.join(TEMP_DIR, "CNAME"), CNAME);
-
-    console.log("🔀 Switching to gh-pages branch...");
-    execSync(`git checkout ${GH_BRANCH}`);
-
-    console.log("🧹 Cleaning gh-pages branch...");
-    fs.readdirSync(process.cwd()).forEach((file) => {
-      if (file !== ".git") fs.removeSync(path.resolve(file));
+    console.log("📂 Copying new files to root...");
+    await fs.copy(DIST_DIR, ROOT_DIR, {
+      filter: (src) => !src.includes(".DS_Store"),
     });
 
-    console.log("📁 Deploying new build to root...");
-    await fs.copy(TEMP_DIR, ".");
-
-    console.log("📤 Committing and pushing...");
-    execSync(`git add .`);
-    execSync(`git commit -m "🚀 Deploy to GitHub Pages"`);
-    execSync(`git push origin ${GH_BRANCH}`);
-
-    console.log("✅ Deployment complete! 🚀");
-
-    // Restore main branch
-    console.log("🔁 Switching back to main branch...");
-    execSync(`git checkout main`);
-    await fs.remove(TEMP_DIR);
-    console.log("✨ Cleaned up and ready to go.");
-  } catch (err) {
-    console.error("❌ Deployment failed:", err);
+    console.log("✅ Deployment complete! Root is updated with new build.");
+    process.exit(0);
+  } catch (e) {
+    console.error("❌ Deployment failed:", e);
+    process.exit(1);
   }
-}
-
-deploy();
+});
