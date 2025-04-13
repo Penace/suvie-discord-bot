@@ -44,10 +44,19 @@ class WatchlistGroup(commands.GroupCog, name="watchlist"):
             return
 
         try:
-            movie_data = fetch_movie_data(
-                imdb_id=imdb_id or "",
-                title=title
-            )
+            movie_data = {
+                "title": title,
+                "genre": "Sci-Fi",
+                "year": "2024",
+                "plot": "Debug movie.",
+                "poster": "https://via.placeholder.com/150",
+                "imdb_url": "https://www.imdb.com/title/tt0000000",
+                "imdb_id": imdb_id or "tt0000000",
+                "imdb_rating": "9.0",
+                "director": "Test Director",
+                "actors": "Test Actor",
+                "type": "movie"
+            }
             media_type = (movie_data.get("Type") or "movie").lower()
             if season or episode:
                 media_type = "series"
