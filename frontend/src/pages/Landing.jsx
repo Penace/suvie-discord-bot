@@ -17,7 +17,7 @@ export default function LandingPage() {
           Your cozy AI movie companion 🎬
         </p>
         <a
-          href="https://discord.com/oauth2/authorize?client_id=YOUR_CLIENT_ID&scope=bot+applications.commands"
+          href="https://discord.com/oauth2/authorize?client_id=1360281760016892066&scope=bot+applications.commands"
           target="_blank"
           rel="noopener noreferrer"
           className="inline-flex items-center mt-6 px-6 py-3 bg-pink-500 hover:bg-pink-600 text-white text-lg font-medium rounded-full transition shadow-lg"
