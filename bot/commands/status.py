@@ -6,12 +6,13 @@ import os
 import platform
 from typing import Optional
 
+from utils.storage import get_or_create_text_channel  # 🆕 for safe channel creation
+
 class StatusCog(commands.Cog):
     def __init__(self, bot: commands.Bot):
         self.bot: commands.Bot = bot
         self.start_time = datetime.now()
         self.status_channel_name = "suvi-status"
-        self.status_message_id: Optional[int] = None
         self.update_status_channel.start()
 
     def cog_unload(self):
@@ -27,15 +28,12 @@ class StatusCog(commands.Cog):
         await interaction.followup.send(embed=embed, ephemeral=True)
 
     def generate_status_embed(self) -> discord.Embed:
-        movie_count = len(getattr(self.bot, "movies", []))  # fallback if not set
-
         embed = discord.Embed(
             title="🧠 Suvie Status",
             description="Current system metrics and state.",
             color=discord.Color.teal()
         )
         embed.add_field(name="⏳ Uptime", value=self.get_uptime(), inline=True)
-        embed.add_field(name="📦 Movies Loaded", value=movie_count, inline=True)
         embed.add_field(name="⚙️ Cogs", value=len(self.bot.cogs), inline=True)
         embed.add_field(name="📜 Commands", value=len(self.bot.tree.get_commands()), inline=True)
         embed.add_field(name="🖥️ Platform", value=f"{platform.system()} {platform.release()}", inline=True)
@@ -45,20 +43,21 @@ class StatusCog(commands.Cog):
 
     @tasks.loop(minutes=5)
     async def update_status_channel(self):
-        channel = discord.utils.get(self.bot.get_all_channels(), name=self.status_channel_name)
-        if not channel or not isinstance(channel, discord.TextChannel):
-            return
+        for guild in self.bot.guilds:
+            channel = await get_or_create_text_channel(self.bot, guild, self.status_channel_name)
+            if not channel:
+                continue
 
-        embed = self.generate_status_embed()
+            embed = self.generate_status_embed()
 
-        async for msg in channel.history(limit=5):
-            if msg.author == self.bot.user:
-                await msg.edit(embed=embed)
-                return
-
-        await channel.send(embed=embed)
+            async for msg in channel.history(limit=5):
+                if msg.author == self.bot.user:
+                    await msg.edit(embed=embed)
+                    break
+            else:
+                await channel.send(embed=embed)
 
 # === Cog Loader ===
 async def setup(bot: commands.Bot):
     await bot.add_cog(StatusCog(bot))
-    print("📁 Status command loaded.")
+    print("📊 Status command loaded.")

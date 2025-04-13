@@ -14,7 +14,6 @@ class WatchlistGroup(commands.GroupCog, name="watchlist"):
         super().__init__()
         self.bot = bot
 
-    # === /watchlist add ===
     @app_commands.command(name="add", description="Add a movie or TV show to your watchlist.")
     @app_commands.describe(
         title="The title of the movie or TV show to add.",
@@ -37,7 +36,8 @@ class WatchlistGroup(commands.GroupCog, name="watchlist"):
         episode: Optional[int] = None
     ):
         await interaction.response.defer(ephemeral=True)
-        movies = load_movies()
+        guild_id = interaction.guild_id
+        movies = load_movies(guild_id)
 
         if any((m.get("title") or "").lower() == title.lower() for m in movies):
             await interaction.followup.send("❌ This title is already in your library.", ephemeral=True)
@@ -68,8 +68,8 @@ class WatchlistGroup(commands.GroupCog, name="watchlist"):
         if year: movie_data["year"] = year
 
         movies.append(movie_data)
-        save_movies(movies)
-        await update_watchlist_channel(interaction.client)
+        save_movies(guild_id, movies)
+        await update_watchlist_channel(interaction.client, guild_id)
 
         title_text = f"{movie_data['title']} (Season {movie_data.get('season')})" if media_type == "series" else movie_data["title"]
         embed = discord.Embed(
@@ -89,27 +89,27 @@ class WatchlistGroup(commands.GroupCog, name="watchlist"):
 
         await interaction.followup.send(embed=embed, ephemeral=True)
 
-    # === /watchlist remove ===
     @app_commands.command(name="remove", description="Remove a movie or show from your watchlist.")
     @app_commands.describe(title="The title to remove.")
     async def remove(self, interaction: discord.Interaction, title: str):
         await interaction.response.defer(ephemeral=True)
-        movies = load_movies()
+        guild_id = interaction.guild_id
+        movies = load_movies(guild_id)
         filtered = [m for m in movies if (m.get("title") or "").lower() != title.lower()]
 
         if len(filtered) == len(movies):
             await interaction.followup.send("❌ That title wasn't found in your watchlist.", ephemeral=True)
             return
 
-        save_movies(filtered)
-        await update_watchlist_channel(self.bot)
+        save_movies(guild_id, filtered)
+        await update_watchlist_channel(self.bot, guild_id)
         await interaction.followup.send(f"🗑️ Removed **{title}** from your watchlist.", ephemeral=True)
 
-    # === /watchlist view ===
     @app_commands.command(name="view", description="View your watchlist.")
     async def view(self, interaction: discord.Interaction):
         await interaction.response.defer(ephemeral=True)
-        movies = load_movies()
+        guild_id = interaction.guild_id
+        movies = load_movies(guild_id)
         watchlist = get_movies_by_status(movies, "watchlist")
 
         if not watchlist:
@@ -135,19 +135,19 @@ class WatchlistGroup(commands.GroupCog, name="watchlist"):
                 embed.set_thumbnail(url=m["poster"])
             await interaction.followup.send(embed=embed, ephemeral=True)
 
-    # === /watchlist clear ===
     @app_commands.command(name="clear", description="Clear all movies or shows from your watchlist.")
     async def clear(self, interaction: discord.Interaction):
         await interaction.response.defer(ephemeral=True)
-        movies = load_movies()
+        guild_id = interaction.guild_id
+        movies = load_movies(guild_id)
         filtered = [m for m in movies if m.get("status") != "watchlist"]
 
         if len(filtered) == len(movies):
             await interaction.followup.send("❌ Your watchlist is already empty.", ephemeral=True)
             return
 
-        save_movies(filtered)
-        await update_watchlist_channel(self.bot)
+        save_movies(guild_id, filtered)
+        await update_watchlist_channel(self.bot, guild_id)
         await interaction.followup.send("✅ Cleared your watchlist.", ephemeral=True)
 
 # === Cog Loader ===

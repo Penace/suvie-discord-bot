@@ -7,56 +7,62 @@ from dotenv import load_dotenv
 from typing import Optional, Union
 from openai.types.chat import ChatCompletionMessageParam
 
-load_dotenv()
+from utils.storage import get_or_create_text_channel  # ✅ Channel auto-creation
 
-# Initialize OpenAI client
+load_dotenv()
 client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
 
 class AICompanionCog(commands.Cog):
     """suvie: Your Discord AI Companion."""
-
+    
     def __init__(self, bot: commands.Bot):
         self.bot = bot
         self.channel_name = "suvie-ai"
-        self.memory: dict[str, list[ChatCompletionMessageParam]] = {}
+        self.memory: dict[int, list[ChatCompletionMessageParam]] = {}
+
+    @commands.Cog.listener()
+    async def on_ready(self):
+        for guild in self.bot.guilds:
+            await get_or_create_text_channel(self.bot, guild, self.channel_name)
 
     @commands.Cog.listener()
     async def on_message(self, message: discord.Message):
-        # 🛡️ Skip bots or DMs
-        if message.author.bot:
+        if message.author.bot or not isinstance(message.channel, discord.TextChannel):
             return
 
-        # ✅ Check for channel type & name (fixes Pyright warning)
-        if not isinstance(message.channel, discord.TextChannel) or message.channel.name != self.channel_name:
+        if message.channel.name != self.channel_name:
             return
 
-        user_input = message.content.strip() if message.content else ""
+        guild_id = message.guild.id if message.guild else 0
+        user_input = message.content.strip()
         if not user_input:
             return
 
-        user_id = str(message.author.id)
-        self.memory.setdefault(user_id, [])
-        self.memory[user_id].append({"role": "user", "content": user_input})
-        self.memory[user_id] = self.memory[user_id][-5:]
+        # Init memory for this guild+user combo
+        self.memory.setdefault(guild_id, {})
+        self.memory[guild_id].setdefault(message.author.id, [])
+        convo = self.memory[guild_id][message.author.id]
 
-        # Check for natural language command
+        convo.append({"role": "user", "content": user_input})
+        convo[:] = convo[-5:]
+
         detected = self.detect_command(user_input)
         if detected:
             await message.channel.send(f"🛠️ Detected command: `{detected['action']}` → **{detected['title']}**")
             return
 
-        system_prompt: ChatCompletionMessageParam = {
-            "role": "system",
-            "content": (
-                "You are suvie, a helpful and warm AI companion on Discord.\n"
-                "Speak casually, like a close friend. Avoid robotic language.\n"
-                "You love movies and TV shows. Be immersive, playful, and personal.\n"
-                "Use memory of recent context.\n"
-                "Only reply in character and stay on-topic."
-            )
-        }
-
-        messages: list[ChatCompletionMessageParam] = [system_prompt] + self.memory[user_id]
+        messages: list[ChatCompletionMessageParam] = [
+            {
+                "role": "system",
+                "content": (
+                    "You are suvie, a helpful and warm AI companion on Discord.\n"
+                    "Speak casually, like a close friend. Avoid robotic language.\n"
+                    "You love movies and TV shows. Be immersive, playful, and personal.\n"
+                    "Use memory of recent context.\n"
+                    "Only reply in character and stay on-topic."
+                )
+            }
+        ] + convo
 
         try:
             response = client.chat.completions.create(
@@ -70,8 +76,8 @@ class AICompanionCog(commands.Cog):
             reply_raw = response.choices[0].message.content
             reply = reply_raw.strip() if reply_raw else "🤖 (No response)"
 
-            self.memory[user_id].append({"role": "assistant", "content": reply})
-            self.memory[user_id] = self.memory[user_id][-5:]
+            convo.append({"role": "assistant", "content": reply})
+            convo[:] = convo[-5:]
 
             await message.channel.send(reply)
 

@@ -2,38 +2,33 @@ import json, os, discord, shutil
 from datetime import datetime
 from pathlib import Path
 from zipfile import ZipFile
-from typing import Union
+from typing import Union, Optional
 
-MOVIES_FILE = "movies.json"
+DATA_DIR = "bot/data"
 BACKUP_DIR = Path("backups/json")
 
-# === Load & Save ===
+# === File Handling Utilities ===
+def get_data_path(guild_id: int, file_name: str) -> str:
+    guild_dir = Path(DATA_DIR) / str(guild_id)
+    guild_dir.mkdir(parents=True, exist_ok=True)
+    return str(guild_dir / file_name)
 
-def load_movies():
-    if not os.path.exists(MOVIES_FILE):
+def load_json(guild_id: int, file_name: str) -> list:
+    path = get_data_path(guild_id, file_name)
+    if not os.path.exists(path):
         return []
-    try:
-        with open(MOVIES_FILE, "r", encoding="utf-8") as f:
+    with open(path, "r", encoding="utf-8") as f:
+        try:
             return json.load(f)
-    except json.JSONDecodeError:
-        return []
+        except json.JSONDecodeError:
+            return []
 
-def save_movies(movies: list):
-    with open(MOVIES_FILE, "w", encoding="utf-8") as f:
-        json.dump(movies, f, indent=4, ensure_ascii=False)
-    BACKUP_DIR.mkdir(parents=True, exist_ok=True)
-    timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
-    shutil.copy(MOVIES_FILE, BACKUP_DIR / f"movies_{timestamp}.json")
-    limit_json_backups(BACKUP_DIR, max_versions=5)
-
-def limit_json_backups(directory: Union[str, Path] = "backups/json", max_versions: int = 5):
-    path = Path(directory)
-    files = sorted(path.glob("movies_*.json"), key=os.path.getmtime, reverse=True)
-    for f in files[max_versions:]:
-        f.unlink()
+def save_json(guild_id: int, file_name: str, data: list):
+    path = get_data_path(guild_id, file_name)
+    with open(path, "w", encoding="utf-8") as f:
+        json.dump(data, f, indent=4, ensure_ascii=False)
 
 # === Filters ===
-
 def get_movie_by_title(movies, title: str):
     return next((m for m in movies if m["title"].lower() == title.lower()), None)
 
@@ -44,7 +39,6 @@ def get_currently_watching_movies(movies):
     return get_movies_by_status(movies, "currently-watching")
 
 # === Embeds ===
-
 def create_embed(movie, title_prefix="", color=discord.Color.teal):
     title = movie["title"]
     if movie.get("type") == "series":
@@ -52,10 +46,8 @@ def create_embed(movie, title_prefix="", color=discord.Color.teal):
         episode = movie.get("episode", 1)
         title = f"{title} (S{season:02}E{episode:02})"
 
-    embed = discord.Embed(
-        title=f"{title_prefix}{title}",
-        color=color
-    )
+    embed = discord.Embed(title=f"{title_prefix}{title}", color=color)
+
     if movie.get("poster") and movie["poster"] != "N/A":
         embed.set_thumbnail(url=movie["poster"])
 
@@ -67,44 +59,10 @@ def create_embed(movie, title_prefix="", color=discord.Color.teal):
 
     return embed
 
-# === Channel Updates ===
+# === Channel Management ===
+async def get_or_create_text_channel(bot: discord.Client, guild: discord.Guild, name: str) -> Optional[discord.TextChannel]:
+    existing = discord.utils.get(guild.text_channels, name=name)
+    if existing:
+        return existing
 
-async def update_channel(bot: discord.Client, channel_name: str, status: str, title_prefix="", color=discord.Color.teal):
-    movies = load_movies()
-    channel = discord.utils.get(bot.get_all_channels(), name=channel_name)
-
-    if not channel or not isinstance(channel, discord.TextChannel):
-        return
-
-    await channel.purge(limit=10)
-    filtered = get_movies_by_status(movies, status)
-
-    if not filtered:
-        await channel.send("📭 Nothing to show here.")
-        return
-
-    for movie in filtered:
-        embed = create_embed(movie, title_prefix, color)
-        await channel.send(embed=embed)
-
-async def update_watchlist_channel(bot: discord.Client):
-    await update_channel(bot, "watchlist", "watchlist", color=discord.Color.teal())
-
-async def update_currently_watching_channel(bot: discord.Client):
-    await update_channel(bot, "currently-watching", "currently-watching", "🎬 Currently Watching: ", color=discord.Color.orange())
-
-async def update_downloaded_channel(bot: discord.Client):
-    await update_channel(bot, "downloaded", "downloaded", color=discord.Color.green())
-
-async def update_watched_channel(bot: discord.Client):
-    await update_channel(bot, "watched", "watched", color=discord.Color.purple())
-
-# === Backup ===
-
-def create_backup_zip():
-    zip_path = Path("backups/backup.zip")
-    zip_path.parent.mkdir(parents=True, exist_ok=True)
-    with ZipFile(zip_path, "w") as zipf:
-        if os.path.exists(MOVIES_FILE):
-            zipf.write(MOVIES_FILE)
-    return zip_path
+    category = discord.utils.get(guild.categories, name="

@@ -5,11 +5,11 @@ from datetime import datetime
 from typing import Optional
 
 from utils.storage import (
-    load_movies,
-    save_movies,
-    get_movie_by_title,
-    update_watched_channel
+    load_json, save_json,
+    get_movie_by_title, update_watched_channel
 )
+
+MOVIES_FILE = "movies.json"
 
 class WatchedCog(commands.Cog):
     def __init__(self, bot: commands.Bot):
@@ -30,7 +30,12 @@ class WatchedCog(commands.Cog):
     ):
         await interaction.response.defer(ephemeral=True)
 
-        movies = load_movies()
+        guild_id = interaction.guild_id
+        if guild_id is None:
+            await interaction.followup.send("❌ This command must be run in a server.", ephemeral=True)
+            return
+
+        movies = load_json(guild_id, MOVIES_FILE)
         movie = get_movie_by_title(movies, title)
 
         if not movie:
@@ -43,8 +48,8 @@ class WatchedCog(commands.Cog):
         if filepath:
             movie["filepath"] = filepath
 
-        save_movies(movies)
-        await update_watched_channel(self.bot)
+        save_json(guild_id, MOVIES_FILE, movies)
+        await update_watched_channel(self.bot, guild_id)
 
         # Confirmation Embed
         embed = discord.Embed(
@@ -68,4 +73,4 @@ class WatchedCog(commands.Cog):
 # === Cog Loader ===
 async def setup(bot: commands.Bot):
     await bot.add_cog(WatchedCog(bot))
-    print("📁 Watched command loaded.")
+    print("🎞️ Watched command loaded.")

@@ -16,7 +16,6 @@ class CurrentlyWatchingCog(commands.GroupCog, name="currentlywatching"):
         super().__init__()
         self.bot = bot
 
-    # === /currentlywatching set ===
     @app_commands.command(name="set", description="Set the currently watching title (movie or TV).")
     @app_commands.describe(
         title="The title you're watching.",
@@ -37,7 +36,8 @@ class CurrentlyWatchingCog(commands.GroupCog, name="currentlywatching"):
         filepath: Optional[str] = None
     ):
         await interaction.response.defer(ephemeral=True)
-        movies = load_movies()
+        guild_id = interaction.guild_id
+        movies = load_movies(guild_id)
 
         matched = None
         if title:
@@ -61,13 +61,12 @@ class CurrentlyWatchingCog(commands.GroupCog, name="currentlywatching"):
         if filepath:
             matched["filepath"] = filepath
 
-        save_movies(movies)
-        await update_currently_watching_channel(interaction.client)
+        save_movies(guild_id, movies)
+        await update_currently_watching_channel(interaction.client, guild_id)
 
         suffix = f" (S{matched['season']:02}E{matched['episode']:02})" if matched.get("type") == "series" else ""
         await interaction.followup.send(f"🎬 Set **{matched['title']}{suffix}** as currently watching.", ephemeral=True)
 
-    # === /currentlywatching update ===
     @app_commands.command(name="update", description="Update a currently watching movie or show.")
     @app_commands.describe(
         title="Title of the entry",
@@ -82,7 +81,8 @@ class CurrentlyWatchingCog(commands.GroupCog, name="currentlywatching"):
         timestamp: Optional[str] = None, filepath: Optional[str] = None
     ):
         await interaction.response.defer(ephemeral=True)
-        movies = load_movies()
+        guild_id = interaction.guild_id
+        movies = load_movies(guild_id)
         match = next((m for m in movies if m.get("title", "").lower() == title.lower()), None)
 
         if not match:
@@ -97,18 +97,18 @@ class CurrentlyWatchingCog(commands.GroupCog, name="currentlywatching"):
         if filepath: match["filepath"] = filepath
 
         match["status"] = "currently-watching"
-        save_movies(movies)
-        await update_currently_watching_channel(interaction.client)
+        save_movies(guild_id, movies)
+        await update_currently_watching_channel(interaction.client, guild_id)
 
         suffix = f" (S{match.get('season', 1):02}E{match.get('episode', 1):02})" if match.get("type") == "series" else ""
         await interaction.followup.send(f"🔁 Updated **{match['title']}{suffix}**.", ephemeral=True)
 
-    # === /currentlywatching next ===
     @app_commands.command(name="next", description="Advance to the next episode of a show.")
     @app_commands.describe(title="Title of the show")
     async def next(self, interaction: discord.Interaction, title: str):
         await interaction.response.defer(ephemeral=True)
-        movies = load_movies()
+        guild_id = interaction.guild_id
+        movies = load_movies(guild_id)
         match = next((m for m in movies if m.get("title", "").lower() == title.lower()), None)
 
         if not match:
@@ -122,15 +122,15 @@ class CurrentlyWatchingCog(commands.GroupCog, name="currentlywatching"):
         match["episode"] = match.get("episode", 1) + 1
         match["status"] = "currently-watching"
 
-        save_movies(movies)
-        await update_currently_watching_channel(interaction.client)
+        save_movies(guild_id, movies)
+        await update_currently_watching_channel(interaction.client, guild_id)
         await interaction.followup.send(f"⏭️ Now watching **{title} S{match['season']:02}E{match['episode']:02}**", ephemeral=True)
 
-    # === /currentlywatching view ===
     @app_commands.command(name="view", description="View all currently watching movies or shows.")
     async def view(self, interaction: discord.Interaction):
         await interaction.response.defer(ephemeral=True)
-        movies = load_movies()
+        guild_id = interaction.guild_id
+        movies = load_movies(guild_id)
         currently_watching = get_currently_watching_movies(movies)
 
         if not currently_watching:
@@ -149,12 +149,12 @@ class CurrentlyWatchingCog(commands.GroupCog, name="currentlywatching"):
             if show.get("poster") and show["poster"] != "N/A": embed.set_thumbnail(url=show["poster"])
             await interaction.followup.send(embed=embed, ephemeral=True)
 
-    # === /currentlywatching remove ===
     @app_commands.command(name="remove", description="Remove a title from your currently watching list.")
     @app_commands.describe(title="The title to remove")
     async def remove(self, interaction: discord.Interaction, title: str):
         await interaction.response.defer(ephemeral=True)
-        movies = load_movies()
+        guild_id = interaction.guild_id
+        movies = load_movies(guild_id)
         updated = False
 
         for entry in movies:
@@ -166,15 +166,15 @@ class CurrentlyWatchingCog(commands.GroupCog, name="currentlywatching"):
             await interaction.followup.send("❌ Title not found in your currently watching list.", ephemeral=True)
             return
 
-        save_movies(movies)
-        await update_currently_watching_channel(interaction.client)
+        save_movies(guild_id, movies)
+        await update_currently_watching_channel(interaction.client, guild_id)
         await interaction.followup.send(f"🗑️ Removed **{title}** from your currently watching list.", ephemeral=True)
 
-    # === /currentlywatching repair ===
     @app_commands.command(name="repair", description="Repair malformed library entries (type, season, episode).")
     async def repair(self, interaction: discord.Interaction):
         await interaction.response.defer(ephemeral=True)
-        movies = load_movies()
+        guild_id = interaction.guild_id
+        movies = load_movies(guild_id)
         fixes = 0
         logs = []
 
@@ -205,8 +205,8 @@ class CurrentlyWatchingCog(commands.GroupCog, name="currentlywatching"):
             if changed:
                 fixes += 1
 
-        save_movies(movies)
-        await update_currently_watching_channel(interaction.client)
+        save_movies(guild_id, movies)
+        await update_currently_watching_channel(interaction.client, guild_id)
 
         if fixes == 0:
             await interaction.followup.send("✅ Everything looks good. No repairs needed!", ephemeral=True)

@@ -4,11 +4,13 @@ from discord.ext import commands
 from typing import Optional
 
 from utils.storage import (
-    load_movies,
-    save_movies,
+    load_json,
+    save_json,
     update_downloaded_channel,
     get_movie_by_title
 )
+
+MOVIES_FILE = "movies.json"
 
 class DownloadedCog(commands.GroupCog, name="downloaded"):
     def __init__(self, bot: commands.Bot):
@@ -29,7 +31,12 @@ class DownloadedCog(commands.GroupCog, name="downloaded"):
         filepath: Optional[str] = None
     ):
         await interaction.response.defer(ephemeral=True)
-        movies = load_movies()
+        guild_id = interaction.guild_id
+        if guild_id is None:
+            await interaction.followup.send("❌ This command must be used in a server.", ephemeral=True)
+            return
+
+        movies = load_json(guild_id, MOVIES_FILE)
 
         match = next(
             (m for m in movies if m["title"].lower() == title.lower() or (imdb_id and m.get("imdb_id") == imdb_id)),
@@ -43,8 +50,8 @@ class DownloadedCog(commands.GroupCog, name="downloaded"):
         match["filepath"] = filepath or match.get("filepath", "N/A")
         match["status"] = "downloaded"
 
-        save_movies(movies)
-        await update_downloaded_channel(self.bot)
+        save_json(guild_id, MOVIES_FILE, movies)
+        await update_downloaded_channel(self.bot, guild_id)
 
         suffix = f" (S{match['season']:02}E{match['episode']:02})" if match.get("type") == "series" else ""
         embed = discord.Embed(
@@ -68,7 +75,12 @@ class DownloadedCog(commands.GroupCog, name="downloaded"):
     )
     async def edit_filepath(self, interaction: discord.Interaction, title: str, filepath: str):
         await interaction.response.defer(ephemeral=True)
-        movies = load_movies()
+        guild_id = interaction.guild_id
+        if guild_id is None:
+            await interaction.followup.send("❌ This command must be used in a server.", ephemeral=True)
+            return
+
+        movies = load_json(guild_id, MOVIES_FILE)
         movie = get_movie_by_title(movies, title)
 
         if not movie or movie.get("status") != "downloaded":
@@ -76,8 +88,8 @@ class DownloadedCog(commands.GroupCog, name="downloaded"):
             return
 
         movie["filepath"] = filepath
-        save_movies(movies)
-        await update_downloaded_channel(self.bot)
+        save_json(guild_id, MOVIES_FILE, movies)
+        await update_downloaded_channel(self.bot, guild_id)
 
         embed = discord.Embed(
             title=f"✏️ Filepath Updated: {movie['title']}",
@@ -91,7 +103,12 @@ class DownloadedCog(commands.GroupCog, name="downloaded"):
     @app_commands.describe(title="The title of the movie to remove from downloaded.")
     async def remove_downloaded(self, interaction: discord.Interaction, title: str):
         await interaction.response.defer(ephemeral=True)
-        movies = load_movies()
+        guild_id = interaction.guild_id
+        if guild_id is None:
+            await interaction.followup.send("❌ This command must be used in a server.", ephemeral=True)
+            return
+
+        movies = load_json(guild_id, MOVIES_FILE)
         movie = get_movie_by_title(movies, title)
 
         if not movie or movie.get("status") != "downloaded":
@@ -100,8 +117,8 @@ class DownloadedCog(commands.GroupCog, name="downloaded"):
 
         movie["status"] = "watchlist"
         movie.pop("filepath", None)
-        save_movies(movies)
-        await update_downloaded_channel(self.bot)
+        save_json(guild_id, MOVIES_FILE, movies)
+        await update_downloaded_channel(self.bot, guild_id)
 
         embed = discord.Embed(
             title=f"🗑️ Removed from Downloaded: {movie['title']}",
@@ -112,4 +129,4 @@ class DownloadedCog(commands.GroupCog, name="downloaded"):
 # === Cog Loader ===
 async def setup(bot: commands.Bot):
     await bot.add_cog(DownloadedCog(bot))
-    print("📁 Downloaded command loaded.")
+    print("📥 Downloaded command loaded.")
