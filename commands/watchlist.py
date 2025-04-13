@@ -14,65 +14,82 @@ class WatchlistGroup(commands.GroupCog, name="watchlist"):
         self.bot = bot
 
     # === /watchlist add ===
-    @app_commands.command(name="add", description="Add a movie to your watchlist.")
+    @app_commands.command(name="add", description="Add a movie or TV show to your watchlist.")
     @app_commands.describe(
-        title="The title of the movie to add.",
-        imdb_id="The IMDb ID of the movie (optional).",
+        title="The title of the movie or TV show to add.",
+        imdb_id="The IMDb ID of the title (optional).",
         filepath="Optional path to the movie file.",
-        genre="The genre or tags for the movie (optional).",
-        year="The year of the movie (optional)."
+        genre="The genre or tags (optional).",
+        year="The year (optional).",
+        season="Season number (for TV shows, optional)",
+        episode="Episode number (for TV shows, optional)"
     )
-    async def add(self, interaction: discord.Interaction, title: str, imdb_id: str = None, filepath: str = None, genre: str = None, year: str = None):
+    async def add(self, interaction: discord.Interaction, title: str, imdb_id: str = None, filepath: str = None, genre: str = None, year: str = None, season: int = None, episode: int = None):
         await interaction.response.defer(ephemeral=True)
         movies = load_movies()
 
         if any(m.get("title", "").lower() == title.lower() for m in movies):
-            await interaction.followup.send("❌ This movie is already in your library.", ephemeral=True)
+            await interaction.followup.send("❌ This title is already in your library.", ephemeral=True)
             return
 
         try:
             movie_data = fetch_movie_data(imdb_id=imdb_id, title=title)
+            media_type = movie_data.get("Type", "movie").lower()
+
+            # Fallback: If user supplied season/episode, force it to series
+            if season or episode:
+                media_type = "series"
+
+            movie_data["type"] = media_type
+            movie_data["status"] = "watchlist"
+
+            if media_type == "series":
+                movie_data["season"] = season or 1
+                movie_data["episode"] = episode or 1
+
         except Exception as e:
-            await interaction.followup.send(f"❌ Failed to fetch movie data: {str(e)}", ephemeral=True)
+            await interaction.followup.send(f"❌ Failed to fetch data: {str(e)}", ephemeral=True)
             return
 
-        movie_data["status"] = "watchlist"
-        movie_data["filepath"] = filepath or None
-        movie_data["genre"] = genre or movie_data.get("genre")
-        movie_data["year"] = year or movie_data.get("year")
+        if filepath:
+            movie_data["filepath"] = filepath
+        if genre:
+            movie_data["genre"] = genre
+        if year:
+            movie_data["year"] = year
 
         movies.append(movie_data)
         save_movies(movies)
-        await update_watchlist_channel(self.bot, movies)
+        await update_watchlist_channel(interaction.client)
 
-        embed = discord.Embed(
-            title=f"✅ {movie_data['title']} added to Watchlist",
-            description=movie_data.get("plot", "No description available."),
-            color=discord.Color.teal()
-        )
-        embed.add_field(name="Genre", value=movie_data.get("genre", "N/A"), inline=True)
-        embed.add_field(name="Year", value=movie_data.get("year", "N/A"), inline=True)
-        embed.add_field(name="Rating", value=movie_data.get("imdb_rating", "N/A"), inline=True)
-        embed.add_field(name="Director", value=movie_data.get("director", "N/A"), inline=False)
-        embed.add_field(name="Stars", value=movie_data.get("actors", "N/A"), inline=False)
-        embed.add_field(name="IMDb", value=movie_data.get("imdb_url", "N/A"), inline=False)
-        if filepath:
-            embed.add_field(name="File Path", value=filepath, inline=False)
+        if media_type == "series":
+            embed = discord.Embed(
+                title=f"📺 Added {movie_data['title']} (Season {movie_data['season']})",
+                color=discord.Color.teal()
+            )
+        else:
+            embed = discord.Embed(
+                title=f"🎬 Added {movie_data['title']}",
+                color=discord.Color.teal()
+            )
+
+        if movie_data.get("genre"): embed.add_field(name="Genre", value=movie_data["genre"], inline=True)
+        if movie_data.get("year"): embed.add_field(name="Year", value=movie_data["year"], inline=True)
+        if filepath: embed.add_field(name="File", value=filepath, inline=False)
         if movie_data.get("poster") and movie_data["poster"] != "N/A":
             embed.set_thumbnail(url=movie_data["poster"])
-
         await interaction.followup.send(embed=embed, ephemeral=True)
 
     # === /watchlist remove ===
-    @app_commands.command(name="remove", description="Remove a movie from your watchlist.")
-    @app_commands.describe(title="The title of the movie to remove.")
+    @app_commands.command(name="remove", description="Remove a movie or show from your watchlist.")
+    @app_commands.describe(title="The title to remove.")
     async def remove(self, interaction: discord.Interaction, title: str):
         await interaction.response.defer(ephemeral=True)
         movies = load_movies()
         filtered = [m for m in movies if m.get("title", "").lower() != title.lower()]
 
         if len(filtered) == len(movies):
-            await interaction.followup.send("❌ That movie wasn't found in your watchlist.", ephemeral=True)
+            await interaction.followup.send("❌ That title wasn't found in your watchlist.", ephemeral=True)
             return
 
         save_movies(filtered)
@@ -91,8 +108,9 @@ class WatchlistGroup(commands.GroupCog, name="watchlist"):
             return
 
         for m in watchlist:
+            title = f"{m['title']} (Season {m['season']})" if m.get("type") == "series" else f"{m['title']} ({m.get('year', 'N/A')})"
             embed = discord.Embed(
-                title=f"🎬 {m['title']} ({m.get('year', 'N/A')})",
+                title=f"🎬 {title}",
                 description=m.get("plot", "No description available."),
                 color=discord.Color.teal()
             )
@@ -109,7 +127,7 @@ class WatchlistGroup(commands.GroupCog, name="watchlist"):
             await interaction.followup.send(embed=embed, ephemeral=True)
 
     # === /watchlist clear ===
-    @app_commands.command(name="clear", description="Clear all movies from your watchlist.")
+    @app_commands.command(name="clear", description="Clear all movies or shows from your watchlist.")
     async def clear(self, interaction: discord.Interaction):
         await interaction.response.defer(ephemeral=True)
         movies = load_movies()

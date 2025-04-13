@@ -1,21 +1,26 @@
-import os
-import asyncio
 import discord
 from discord.ext import commands
 from dotenv import load_dotenv
+import os
+import asyncio
 
-# 🔧 Load environment
 load_dotenv()
+
 TOKEN = os.getenv("DISCORD_TOKEN")
 if not TOKEN:
     raise EnvironmentError("DISCORD_TOKEN is not set in the .env file.")
 
-# 🧠 Bot setup
+# === Setup Intents ===
 intents = discord.Intents.default()
-bot = commands.Bot(command_prefix="!", intents=intents)
-bot.remove_command("help")  # Optional: removes default help command
+intents.message_content = True  # REQUIRED for reading chat
+intents.guilds = True
+intents.members = True
 
-# 🌐 Sync and status
+# === Create Bot ===
+bot = commands.Bot(command_prefix="!", intents=intents)
+bot.remove_command("help")
+
+# === On Ready ===
 @bot.event
 async def on_ready():
     print(f"✅ Suvie is online as {bot.user} (ID: {bot.user.id})")
@@ -25,30 +30,26 @@ async def on_ready():
     except Exception as e:
         print(f"❌ Failed to sync commands: {e}")
 
-# 📦 Load all command cogs
+# === Load Cogs ===
 async def load_cogs():
-    command_dir = "./commands"
-    for filename in os.listdir(command_dir):
-        if filename.endswith(".py"):
-            cog_name = filename[:-3]
+    for file in os.listdir("./commands"):
+        if file.endswith(".py"):
+            name = file[:-3]
             try:
-                await bot.load_extension(f"commands.{cog_name}")
-                print(f"📁 Loaded cog: {cog_name}")
+                await bot.load_extension(f"commands.{name}")
+                print(f"📁 Loaded cog: {name}")
             except Exception as e:
-                print(f"⚠️ Failed to load {cog_name}: {e}")
+                print(f"⚠️ Failed to load {name}: {type(e).__name__}: {e}")
 
-# 🚀 Launch bot
+# === Run Bot ===
 async def main():
     await load_cogs()
     await bot.start(TOKEN)
 
-# ⏯️ Entrypoint
 if __name__ == "__main__":
     try:
         asyncio.run(main())
     except KeyboardInterrupt:
-        print("👋 Gracefully shutting down...")
-        asyncio.run(bot.close())
+        print("🛑 Shutting down...")
     except Exception as e:
-        print(f"💥 Unexpected error: {e}")
-        asyncio.run(bot.close())
+        print(f"❌ Unexpected error: {type(e).__name__}: {e}")

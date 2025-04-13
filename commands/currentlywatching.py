@@ -6,9 +6,8 @@ from datetime import datetime
 from utils.storage import (
     load_movies,
     save_movies,
-    update_currently_watching,
-    get_currently_watching_movie,
     update_currently_watching_channel,
+    get_currently_watching_movies,
     get_movie_by_title
 )
 
@@ -18,14 +17,21 @@ class CurrentlyWatchingCog(commands.GroupCog, name="currentlywatching"):
         self.bot = bot
 
     # === /currentlywatching set ===
-    @app_commands.command(name="set", description="Set the currently watching movie.")
+    @app_commands.command(name="set", description="Set the currently watching title (movie or TV).")
     @app_commands.describe(
-        title="The title of the movie you're watching.",
+        title="The title you're watching.",
         imdb_id="The IMDb ID (optional).",
-        timestamp="Timestamp in the movie (e.g. 01:12:43).",
-        filepath="Optional path to the movie file."
+        season="Season number (for series)",
+        episode="Episode number (for series)",
+        timestamp="Time (e.g., 00:45:32)",
+        filepath="Optional file path"
     )
-    async def set(self, interaction: discord.Interaction, title: str = None, imdb_id: str = None, timestamp: str = None, filepath: str = None):
+    async def set(
+        self, interaction: discord.Interaction,
+        title: str = None, imdb_id: str = None,
+        season: int = None, episode: int = None,
+        timestamp: str = None, filepath: str = None
+    ):
         await interaction.response.defer(ephemeral=True)
         movies = load_movies()
 
@@ -36,61 +42,194 @@ class CurrentlyWatchingCog(commands.GroupCog, name="currentlywatching"):
             matched = next((m for m in movies if m.get("imdb_id") == imdb_id), None)
 
         if not matched:
-            await interaction.followup.send("❌ Movie not found in your library.", ephemeral=True)
+            await interaction.followup.send("❌ Title not found in your library.", ephemeral=True)
             return
 
-        update_currently_watching(movies, matched.get("imdb_id"))
+        matched["status"] = "currently-watching"
+        if matched.get("type") in ("series", "tv"):
+            matched["season"] = season or matched.get("season", 1)
+            matched["episode"] = episode or matched.get("episode", 1)
+        else:
+            matched["type"] = "series"  # ← Fallback for when OMDb fails
+            matched["season"] = season or 1
+            matched["episode"] = episode or 1
 
-        matched["timestamp"] = timestamp or datetime.now().strftime("%H:%M:%S")
+        if timestamp:
+            matched["timestamp"] = timestamp
         if filepath:
             matched["filepath"] = filepath
 
         save_movies(movies)
-        await update_currently_watching_channel(self.bot, movies)
+        await update_currently_watching_channel(interaction.client)
 
-        embed = discord.Embed(
-            title=f"🎬 Now Watching: {matched['title']}",
-            color=discord.Color.green()
-        )
-        embed.add_field(name="Year", value=matched.get("year", "N/A"), inline=True)
-        embed.add_field(name="Genre", value=matched.get("genre", "N/A"), inline=True)
-        embed.add_field(name="IMDb", value=matched.get("imdb_url", "N/A"), inline=False)
-        embed.add_field(name="Timestamp", value=matched["timestamp"], inline=True)
-        if matched.get("filepath"):
-            embed.add_field(name="File Path", value=matched["filepath"], inline=False)
-        if matched.get("poster") and matched["poster"] != "N/A":
-            embed.set_thumbnail(url=matched["poster"])
+        suffix = f" (S{matched['season']:02}E{matched['episode']:02})" if matched.get("type") == "series" else ""
+        await interaction.followup.send(f"🎬 Set **{matched['title']}{suffix}** as currently watching.", ephemeral=True)
 
-        await interaction.followup.send(embed=embed, ephemeral=True)
+    # === /currentlywatching update ===
+    @app_commands.command(name="update", description="Update a currently watching movie or show.")
+    @app_commands.describe(
+        title="Title of the entry",
+        season="New season (TV only)",
+        episode="New episode (TV only)",
+        timestamp="New timestamp (optional)",
+        filepath="New file path (optional)"
+    )
+    async def update(self, interaction: discord.Interaction, title: str, season: int = None, episode: int = None, timestamp: str = None, filepath: str = None):
+        await interaction.response.defer(ephemeral=True)
+        movies = load_movies()
+        match = next((m for m in movies if m.get("title", "").lower() == title.lower()), None)
+
+        if not match:
+            await interaction.followup.send("❌ Entry not found in your library.", ephemeral=True)
+            return
+
+        # Apply series-specific updates
+        if match.get("type") == "series":
+            if season:
+                match["season"] = season
+            if episode:
+                match["episode"] = episode
+
+        # Apply universal updates
+        if timestamp:
+            match["timestamp"] = timestamp
+        if filepath:
+            match["filepath"] = filepath
+
+        match["status"] = "currently-watching"
+        save_movies(movies)
+        await update_currently_watching_channel(interaction.client)
+
+        suffix = f" (S{match.get('season', 1):02}E{match.get('episode', 1):02})" if match.get("type") == "series" else ""
+        await interaction.followup.send(f"🔁 Updated **{match['title']}{suffix}**.", ephemeral=True)         
+  
+    # === /currentlywatching next ===            
+    @app_commands.command(name="next", description="Advance to the next episode of a show.")
+    @app_commands.describe(title="Title of the show")
+    async def next(self, interaction: discord.Interaction, title: str):
+        await interaction.response.defer(ephemeral=True)
+        movies = load_movies()
+        match = next((m for m in movies if m.get("title", "").lower() == title.lower()), None)
+
+        if not match:
+            await interaction.followup.send("❌ Show not found.", ephemeral=True)
+            return
+
+        if match.get("type") not in ("series", "tv"):
+            await interaction.followup.send("❌ This command only works on TV shows.", ephemeral=True)
+            return
+
+        match["episode"] = match.get("episode", 1) + 1
+        match["status"] = "currently-watching"
+
+        save_movies(movies)
+        await update_currently_watching_channel(interaction.client)
+        await interaction.followup.send(f"⏭️ Now watching **{title} S{match['season']:02}E{match['episode']:02}**", ephemeral=True)
 
     # === /currentlywatching view ===
-    @app_commands.command(name="view", description="View the currently watching movie.")
+    @app_commands.command(name="view", description="View all currently watching movies or shows.")
     async def view(self, interaction: discord.Interaction):
         await interaction.response.defer(ephemeral=True)
         movies = load_movies()
-        movie = get_currently_watching_movie(movies)
+        currently_watching = [m for m in movies if m.get("status") == "currently-watching"]
 
-        if not movie:
-            await interaction.followup.send("📭 Nothing is currently being watched.", ephemeral=True)
+        if not currently_watching:
+            await interaction.followup.send("📭 You're not currently watching anything.", ephemeral=True)
             return
 
-        embed = discord.Embed(
-            title=f"🎬 Currently Watching: {movie['title']}",
-            color=discord.Color.green()
-        )
-        embed.add_field(name="Year", value=movie.get("year", "N/A"), inline=True)
-        embed.add_field(name="Genre", value=movie.get("genre", "N/A"), inline=True)
-        embed.add_field(name="IMDb", value=movie.get("imdb_url", "N/A"), inline=False)
-        if movie.get("timestamp"):
-            embed.add_field(name="Timestamp", value=movie["timestamp"], inline=True)
-        if movie.get("filepath"):
-            embed.add_field(name="File Path", value=movie["filepath"], inline=False)
-        if movie.get("poster") and movie["poster"] != "N/A":
-            embed.set_thumbnail(url=movie["poster"])
+        for show in currently_watching:
+            season = show.get("season")
+            episode = show.get("episode")
 
-        await interaction.followup.send(embed=embed, ephemeral=True)
+            if season is not None and episode is not None:
+                title = f"{show['title']} (S{int(season):02}E{int(episode):02})"
+            else:
+                title = show["title"]
+
+            embed = discord.Embed(title=f"🎬 {title}", color=discord.Color.orange())
+            if show.get("timestamp"):
+                embed.add_field(name="Timestamp", value=show["timestamp"], inline=True)
+            if show.get("filepath"):
+                embed.add_field(name="File", value=show["filepath"], inline=False)
+            if show.get("imdb_url"):
+                embed.add_field(name="IMDb", value=show["imdb_url"], inline=False)
+            if show.get("poster") and show["poster"] != "N/A":
+                embed.set_thumbnail(url=show["poster"])
+            await interaction.followup.send(embed=embed, ephemeral=True)
+            
+    # === /currentlywatching remove ===
+    @app_commands.command(name="remove", description="Remove a title from your currently watching list.")
+    @app_commands.describe(title="The title to remove")
+    async def remove(self, interaction: discord.Interaction, title: str):
+        await interaction.response.defer(ephemeral=True)
+        movies = load_movies()
+
+        updated = False
+        for entry in movies:
+            if entry.get("title", "").lower() == title.lower() and entry.get("status") == "currently-watching":
+                entry["status"] = "watchlist"  # or "paused" if you want to add that later
+                updated = True
+
+        if not updated:
+            await interaction.followup.send("❌ Title not found in your currently watching list.", ephemeral=True)
+            return
+
+        save_movies(movies)
+        await update_currently_watching_channel(interaction.client)
+        await interaction.followup.send(f"🗑️ Removed **{title}** from your currently watching list.", ephemeral=True)
+
+    # === /currentlywatching repair ===
+    @app_commands.command(name="repair", description="Repair malformed library entries (type, season, episode).")
+    async def repair(self, interaction: discord.Interaction):
+        await interaction.response.defer(ephemeral=True)
+        movies = load_movies()
+        fixes = 0
+        logs = []
+
+        for m in movies:
+            title = m.get("title", "Untitled")
+            changed = False
+
+            # Fix type if missing or incorrect
+            if m.get("season") or m.get("episode"):
+                if m.get("type") != "series":
+                    m["type"] = "series"
+                    changed = True
+                    logs.append(f"🔧 Fixed type for **{title}** → series")
+
+            # Ensure type exists
+            if not m.get("type"):
+                m["type"] = "movie"
+                changed = True
+                logs.append(f"🔧 Defaulted type for **{title}** → movie")
+
+            # Set season/episode if missing on series
+            if m.get("type") == "series":
+                if "season" not in m:
+                    m["season"] = 1
+                    changed = True
+                    logs.append(f"🧩 Set missing season for **{title}** → 1")
+                if "episode" not in m:
+                    m["episode"] = 1
+                    changed = True
+                    logs.append(f"🧩 Set missing episode for **{title}** → 1")
+
+            if changed:
+                fixes += 1
+
+        save_movies(movies)
+        await update_currently_watching_channel(interaction.client)
+
+        if fixes == 0:
+            await interaction.followup.send("✅ Everything looks good. No repairs needed!", ephemeral=True)
+        else:
+            summary = f"✅ Repaired **{fixes}** entries.\n" + "\n".join(logs[:10])
+            if fixes > 10:
+                summary += f"\n...and {fixes - 10} more."
+            await interaction.followup.send(summary, ephemeral=True)
+        
 
 # === Cog Loader ===
 async def setup(bot: commands.Bot):
     await bot.add_cog(CurrentlyWatchingCog(bot))
-    print("📁 Currently Watching command loaded.")
+    print("📺 Loaded cog: currentlywatching")

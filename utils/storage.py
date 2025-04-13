@@ -1,8 +1,4 @@
-import json
-import os
-import discord
-import shutil
-import glob
+import json, os, discord, shutil, glob
 from datetime import datetime
 from pathlib import Path
 from zipfile import ZipFile
@@ -11,152 +7,128 @@ MOVIES_FILE = "movies.json"
 
 # === Load & Save ===
 
-def load_movies() -> list:
-    """Load movies from the JSON file, or return empty list if missing or invalid."""
+def load_movies():
     if not os.path.exists(MOVIES_FILE):
         return []
-    try:
-        with open(MOVIES_FILE, "r", encoding="utf-8") as f:
+    with open(MOVIES_FILE, "r", encoding="utf-8") as f:
+        try:
             return json.load(f)
-    except json.JSONDecodeError:
-        return []
+        except json.JSONDecodeError:
+            return []
 
 def save_movies(movies: list):
-    """Save movies to the JSON file and maintain 5 latest backups."""
     with open(MOVIES_FILE, "w", encoding="utf-8") as f:
         json.dump(movies, f, indent=4, ensure_ascii=False)
-
     backup_dir = Path("backups/json")
     backup_dir.mkdir(parents=True, exist_ok=True)
-
     timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
-    backup_path = backup_dir / f"movies_{timestamp}.json"
-    shutil.copy(MOVIES_FILE, backup_path)
-
+    shutil.copy(MOVIES_FILE, backup_dir / f"movies_{timestamp}.json")
     limit_json_backups(backup_dir, max_versions=5)
 
 def limit_json_backups(directory="backups/json", max_versions=5):
-    """Keep only the last N JSON backups."""
     path = Path(directory)
     files = sorted(path.glob("movies_*.json"), key=os.path.getmtime, reverse=True)
-    for old_file in files[max_versions:]:
-        old_file.unlink()
+    for f in files[max_versions:]:
+        f.unlink()
 
-# === Movie Helpers ===
+# === General Filters ===
 
-def get_movie_by_title(movies: list, title: str) -> dict:
-    """Find a movie by exact title (case-insensitive)."""
-    return next((m for m in movies if m.get("title", "").lower() == title.lower()), None)
+def get_movie_by_title(movies, title: str):
+    return next((m for m in movies if m["title"].lower() == title.lower()), None)
 
-def get_movies_by_status(movies: list, status: str) -> list:
-    """Filter movies by status."""
+def get_movies_by_status(movies, status: str):
     return [m for m in movies if m.get("status") == status]
 
-def get_currently_watching_movie(movies: list) -> dict:
-    """Return the movie marked as currently-watching."""
-    return next((m for m in movies if m.get("status") == "currently-watching"), None)
+def get_currently_watching_movies(movies):
+    return [m for m in movies if m.get("status") == "currently-watching"]
 
-# === Manual Backup (.zip) ===
+# === Channel Update ===
 
-def create_backup_zip(output_path="backups/suvie_backup.zip"):
-    """Zip movies.json and its backup history into a single archive."""
-    with ZipFile(output_path, "w") as zipf:
-        if Path(MOVIES_FILE).exists():
-            zipf.write(MOVIES_FILE)
-        for file in glob.glob("backups/json/*.json"):
-            zipf.write(file)
-
-# === Channel Display Updater ===
-
-async def update_channel(bot, channel_name: str, movies: list, filter_func, embed_title: str, color: discord.Color):
-    """Replace all messages in a channel with a single embed displaying filtered movie list."""
-    channel = discord.utils.get(bot.get_all_channels(), name=channel_name)
-    if not channel:
-        print(f"Channel '{channel_name}' not found.")
+async def update_watchlist_channel(bot: discord.Client, movies=None):
+    if not movies:
+        movies = load_movies()
+    channel = discord.utils.get(bot.get_all_channels(), name="watchlist")
+    if not channel or not isinstance(channel, discord.TextChannel):
         return
+    await channel.purge(limit=10)
+    watchlist = get_movies_by_status(movies, "watchlist")
 
-    entries = filter_func(movies)
-    await channel.purge(limit=100)
+    for m in watchlist:
+        title = f"{m['title']} (S{m['season']:02}E{m['episode']:02})" if m.get("type") == "series" else m["title"]
+        embed = discord.Embed(title=title, color=discord.Color.teal())
+        if m.get("poster") and m["poster"] != "N/A":
+            embed.set_thumbnail(url=m["poster"])
+        if m.get("genre"): embed.add_field(name="Genre", value=m["genre"], inline=True)
+        if m.get("year"): embed.add_field(name="Year", value=m["year"], inline=True)
+        if m.get("filepath"): embed.add_field(name="File", value=m["filepath"], inline=False)
+        if m.get("imdb_url"): embed.add_field(name="IMDb", value=m["imdb_url"], inline=False)
+        await channel.send(embed=embed)
 
-    if not entries:
-        await channel.send("No entries found.")
-        return
-
-    embed = discord.Embed(title=embed_title, color=color)
-    for m in entries:
-        info = f"**{m['title']}** ({m.get('year', 'N/A')})"
-        if m.get("timestamp"):
-            info += f" — `{m['timestamp']}`"
-        if m.get("filepath"):
-            info += f"\n`{m['filepath']}`"
-        embed.add_field(name="", value=info, inline=False)
-
-    await channel.send(embed=embed)
-
-# === Specialized Channel Wrappers ===
-
-async def update_watchlist_channel(bot, movies):
-    await update_channel(
-        bot, "watchlist", movies,
-        lambda m: get_movies_by_status(m, "watchlist"),
-        "🎬 Watchlist", discord.Color.teal()
-    )
-
-async def update_downloaded_channel(bot, movies):
-    await update_channel(
-        bot, "downloaded", movies,
-        lambda m: get_movies_by_status(m, "downloaded"),
-        "📥 Downloaded Movies", discord.Color.gold()
-    )
-
-async def update_watched_channel(bot, movies):
-    await update_channel(
-        bot, "watched", movies,
-        lambda m: get_movies_by_status(m, "watched"),
-        "✅ Watched Movies", discord.Color.from_rgb(255, 105, 180)  # Hot Pink
-    )
-
-async def update_currently_watching_channel(bot, movies):
-    """Update the currently watching movie embed."""
+async def update_currently_watching_channel(bot: discord.Client):
+    movies = load_movies()
+    currently_watching = get_currently_watching_movies(movies)
     channel = discord.utils.get(bot.get_all_channels(), name="currently-watching")
-    if not channel:
-        print("Channel 'currently-watching' not found.")
+    if not channel or not isinstance(channel, discord.TextChannel):
+        return
+    await channel.purge(limit=10)
+
+    if not currently_watching:
+        await channel.send("📭 Not watching anything right now.")
         return
 
-    movie = get_currently_watching_movie(movies)
-    await channel.purge(limit=100)
+    for show in currently_watching:
+        season = show.get("season")
+        episode = show.get("episode")
 
-    if not movie:
-        await channel.send("No currently watching movie found.")
+        if season is not None and episode is not None:
+            title = f"{show['title']} (S{int(season):02}E{int(episode):02})"
+        else:
+            title = show["title"]
+
+        embed = discord.Embed(title=f"🎬 Currently Watching: {title}", color=discord.Color.orange())
+        if show.get("timestamp"):
+            embed.add_field(name="Timestamp", value=show["timestamp"], inline=True)
+        if show.get("filepath"):
+            embed.add_field(name="File", value=show["filepath"], inline=False)
+        if show.get("imdb_url"):
+            embed.add_field(name="IMDb", value=show["imdb_url"], inline=False)
+        if show.get("poster") and show["poster"] != "N/A":
+            embed.set_thumbnail(url=show["poster"])
+        await channel.send(embed=embed)
+        
+def create_backup_zip():
+    zip_path = Path("backups/backup.zip")
+    zip_path.parent.mkdir(parents=True, exist_ok=True)
+    with ZipFile(zip_path, "w") as zipf:
+        if os.path.exists(MOVIES_FILE):
+            zipf.write(MOVIES_FILE)
+    return zip_path
+
+async def update_downloaded_channel(bot: discord.Client):
+    movies = load_movies()
+    downloaded = get_movies_by_status(movies, "downloaded")
+    channel = discord.utils.get(bot.get_all_channels(), name="downloaded")
+    if not channel or not isinstance(channel, discord.TextChannel):
         return
-
-    embed = discord.Embed(
-        title=f"🎥 Currently Watching: {movie['title']}",
-        color=discord.Color.green()
-    )
-    if movie.get("year"):
-        embed.add_field(name="Year", value=movie["year"], inline=True)
-    if movie.get("genre"):
-        embed.add_field(name="Genre", value=movie["genre"], inline=True)
-    if movie.get("timestamp"):
-        embed.add_field(name="Time", value=movie["timestamp"], inline=True)
-    if movie.get("filepath"):
-        embed.add_field(name="File Path", value=movie["filepath"], inline=False)
-    if movie.get("poster") and movie["poster"] != "N/A":
-        embed.set_thumbnail(url=movie["poster"])
-
-    await channel.send(embed=embed)
-
-# === Special State Logic ===
-
-def update_currently_watching(movies: list, imdb_id: str):
-    """Reset all movies marked currently-watching, then set the new one."""
-    for m in movies:
-        if m.get("status") == "currently-watching":
-            m["status"] = "watchlist"
-        if m.get("imdb_id") == imdb_id:
-            m["status"] = "currently-watching"
-            
-def get_downloaded_movie(movies: list, title: str) -> dict:
-    movie = get_movie_by_title(movies, title)
-    return movie if movie and movie.get("status") == "downloaded" else None
+    await channel.purge(limit=10)
+    for m in downloaded:
+        embed = discord.Embed(title=m["title"], color=discord.Color.green())
+        if m.get("filepath"): embed.add_field(name="File", value=m["filepath"], inline=False)
+        if m.get("imdb_url"): embed.add_field(name="IMDb", value=m["imdb_url"], inline=False)
+        if m.get("poster") and m["poster"] != "N/A": embed.set_thumbnail(url=m["poster"])
+        await channel.send(embed=embed)
+    
+async def update_watched_channel(bot: discord.Client):
+    movies = load_movies()
+    watched = get_movies_by_status(movies, "watched")
+    channel = discord.utils.get(bot.get_all_channels(), name="watched")
+    if not channel or not isinstance(channel, discord.TextChannel):
+        return
+    await channel.purge(limit=10)
+    for m in watched:
+        embed = discord.Embed(title=m["title"], color=discord.Color.purple())
+        if m.get("filepath"): embed.add_field(name="File", value=m["filepath"], inline=False)
+        if m.get("imdb_url"): embed.add_field(name="IMDb", value=m["imdb_url"], inline=False)
+        if m.get("poster") and m["poster"] != "N/A": embed.set_thumbnail(url=m["poster"])
+        await channel.send(embed=embed)
+    

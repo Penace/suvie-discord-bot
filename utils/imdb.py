@@ -27,7 +27,6 @@ def fetch_movie_data(imdb_id: str = None, title: str = None) -> dict:
     if data.get("Response") != "True":
         raise ValueError(data.get("Error", "Movie not found."))
 
-    # Return a simplified dictionary with only what you need
     return {
         "title": data.get("Title"),
         "year": data.get("Year"),
@@ -36,5 +35,9 @@ def fetch_movie_data(imdb_id: str = None, title: str = None) -> dict:
         "poster": data.get("Poster"),
         "imdb_url": f"https://www.imdb.com/title/{data.get('imdbID')}",
         "imdb_id": data.get("imdbID"),
-        "trailer": None  # Placeholder for future YouTube scraping or linking
+        "imdb_rating": data.get("imdbRating"),
+        "director": data.get("Director"),
+        "actors": data.get("Actors"),
+        "type": data.get("Type", "movie"),
+        "trailer": None  # Placeholder
     }

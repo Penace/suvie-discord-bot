@@ -4,7 +4,6 @@ from discord.ext import commands
 from utils.storage import (
     load_movies,
     save_movies,
-    get_downloaded_movie,
     update_downloaded_channel,
     get_movie_by_title
 )
@@ -14,9 +13,9 @@ class DownloadedCog(commands.GroupCog, name="downloaded"):
         self.bot = bot
 
     # === /downloaded add ===
-    @app_commands.command(name="add", description="Mark a movie as downloaded.")
+    @app_commands.command(name="add", description="Mark a movie or show as downloaded.")
     @app_commands.describe(
-        title="The title of the movie.",
+        title="The title of the movie or show.",
         imdb_id="The IMDb ID (optional).",
         filepath="Path to the downloaded file (optional)."
     )
@@ -30,26 +29,23 @@ class DownloadedCog(commands.GroupCog, name="downloaded"):
         )
 
         if not match:
-            await interaction.followup.send("❌ Movie not found in your library.", ephemeral=True)
+            await interaction.followup.send("❌ Title not found in your library.", ephemeral=True)
             return
 
-        match["filepath"] = filepath or "N/A"
+        match["filepath"] = filepath or match.get("filepath", "N/A")
         match["status"] = "downloaded"
 
         save_movies(movies)
-        await update_downloaded_channel(self.bot, movies)
+        await update_downloaded_channel(self.bot)
 
+        suffix = f" (S{match['season']:02}E{match['episode']:02})" if match.get("type") == "series" else ""
         embed = discord.Embed(
-            title=f"📥 Marked as Downloaded: {match['title']}",
+            title=f"📥 Marked as Downloaded: {match['title']}{suffix}",
             color=discord.Color.gold()
         )
-        embed.add_field(name="Status", value="Downloaded", inline=True)
-        embed.add_field(name="File Path", value=match["filepath"], inline=False)
-        if match.get("imdb_url"):
-            embed.add_field(name="IMDb", value=match["imdb_url"], inline=False)
-        if match.get("poster") and match["poster"] != "N/A":
-            embed.set_thumbnail(url=match["poster"])
-
+        if match.get("filepath"): embed.add_field(name="File", value=match["filepath"], inline=False)
+        if match.get("imdb_url"): embed.add_field(name="IMDb", value=match["imdb_url"], inline=False)
+        if match.get("poster") and match["poster"] != "N/A": embed.set_thumbnail(url=match["poster"])
         await interaction.followup.send(embed=embed, ephemeral=True)
 
     # === /downloaded edit ===
@@ -61,7 +57,7 @@ class DownloadedCog(commands.GroupCog, name="downloaded"):
     async def edit_filepath(self, interaction: discord.Interaction, title: str, filepath: str):
         await interaction.response.defer(ephemeral=True)
         movies = load_movies()
-        movie = get_downloaded_movie(movies, title)
+        movie = get_movie_by_title(movies, title)
 
         if not movie:
             await interaction.followup.send("❌ Movie not found in downloaded list.", ephemeral=True)
@@ -84,7 +80,7 @@ class DownloadedCog(commands.GroupCog, name="downloaded"):
     async def remove_downloaded(self, interaction: discord.Interaction, title: str):
         await interaction.response.defer(ephemeral=True)
         movies = load_movies()
-        movie = get_downloaded_movie(movies, title)
+        movie = get_movie_by_title(movies, title)
 
         if not movie:
             await interaction.followup.send("❌ Movie not found in downloaded list.", ephemeral=True)
