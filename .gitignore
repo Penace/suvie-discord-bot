@@ -1,0 +1,24 @@
+# Environment
+.env
+*.env
+
+# IDE/editor settings
+.vscode/
+.idea/
+
+# System
+.DS_Store
+
+# Backup & temporary files
+backups/
+*.zip
+movies.json
+movies_*.json
+
+# Python
+*.pyc
+__pycache__/
+suvie-env/
+
+# Node
+node_modules/

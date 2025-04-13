@@ -4,8 +4,8 @@ import path from "path";
 
 const ROOT = path.resolve(".");
 const DIST = path.resolve("frontend/dist");
-const CNAME_SOURCE = path.resolve("docs/CNAME");
 const TEMP = path.resolve(".deploy-temp");
+const FILES_TO_PRESERVE = ["CNAME", ".gitignore"]; // Add more if needed
 
 async function run() {
   try {
@@ -15,17 +15,21 @@ async function run() {
       stdio: "inherit",
     });
 
-    console.log("📁 Saving CNAME to temp...");
+    console.log("📁 Backing up essential files...");
     await fs.ensureDir(TEMP);
-    await fs.copy(CNAME_SOURCE, path.join(TEMP, "CNAME"));
+    for (const file of FILES_TO_PRESERVE) {
+      if (await fs.pathExists(path.join(ROOT, file))) {
+        await fs.copy(path.join(ROOT, file), path.join(TEMP, file));
+      }
+    }
 
     console.log("🔀 Switching to gh-pages...");
     execSync("git checkout gh-pages", { stdio: "inherit" });
 
-    console.log("🧹 Cleaning gh-pages...");
+    console.log("🧹 Cleaning gh-pages root...");
     const files = await fs.readdir(ROOT);
     for (const file of files) {
-      if (![".git", ".gitignore"].includes(file)) {
+      if (![".git", ".deploy-temp"].includes(file)) {
         await fs.remove(path.join(ROOT, file));
       }
     }
@@ -33,10 +37,14 @@ async function run() {
     console.log("📂 Copying new build to root...");
     await fs.copy(DIST, ROOT);
 
-    console.log("📑 Restoring CNAME...");
-    await fs.copy(path.join(TEMP, "CNAME"), path.join(ROOT, "CNAME"));
+    console.log("📑 Restoring preserved files...");
+    for (const file of FILES_TO_PRESERVE) {
+      if (await fs.pathExists(path.join(TEMP, file))) {
+        await fs.copy(path.join(TEMP, file), path.join(ROOT, file));
+      }
+    }
 
-    console.log("📄 Adding .nojekyll...");
+    console.log("📄 Ensuring .nojekyll is present...");
     await fs.outputFile(path.join(ROOT, ".nojekyll"), "");
 
     console.log("📤 Committing & pushing...");
