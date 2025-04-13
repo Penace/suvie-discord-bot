@@ -1,0 +1,13 @@
+services:
+  - type: web
+    name: suvie-backend
+    runtime: python
+    repo: https://github.com/Penace/suvie-backend
+    branch: main
+    buildCommand: pip install -r requirements.txt
+    startCommand: gunicorn app:app
+    envVars:
+      - key: FLASK_ENV
+        value: production
+    autoDeploy: true
+    rootDir: 
