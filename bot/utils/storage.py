@@ -65,4 +65,79 @@ async def get_or_create_text_channel(bot: discord.Client, guild: discord.Guild, 
     if existing:
         return existing
 
-    category = discord.utils.get(guild.categories, name="
+    category = discord.utils.get(guild.categories, name="🎮 suvie")
+    if not category:
+        category = await guild.create_category("🎮 suvie")
+
+    try:
+        return await guild.create_text_channel(name=name, category=category)
+    except Exception as e:
+        print(f"❌ Failed to create channel {name}: {e}")
+        return None
+
+# === Channel Updates ===
+async def update_channel(bot: discord.Client, guild_id: int, channel_name: str, status: str, title_prefix="", color=discord.Color.teal):
+    path = get_data_path(guild_id, "movies.json")
+    if not os.path.exists(path):
+        return
+
+    with open(path, "r", encoding="utf-8") as f:
+        try:
+            movies = json.load(f)
+        except json.JSONDecodeError:
+            return
+
+    guild = bot.get_guild(guild_id)
+    if not guild:
+        print("⚠️ Guild not found.")
+        return
+
+    channel = await get_or_create_text_channel(bot, guild, channel_name)
+    if not channel:
+        print("⚠️ Channel could not be created.")
+        return
+
+    await channel.purge(limit=10)
+    filtered = get_movies_by_status(movies, status)
+
+    if not filtered:
+        await channel.send("📭 Nothing to show here.")
+        return
+
+    for movie in filtered:
+        embed = create_embed(movie, title_prefix, color)
+        await channel.send(embed=embed)
+
+async def update_watchlist_channel(bot: discord.Client):
+    for guild in bot.guilds:
+        await update_channel(bot, guild.id, "watchlist", "watchlist", color=discord.Color.teal())
+
+async def update_currently_watching_channel(bot: discord.Client):
+    for guild in bot.guilds:
+        await update_channel(bot, guild.id, "currently-watching", "currently-watching", "🎬 Currently Watching: ", color=discord.Color.orange())
+
+async def update_downloaded_channel(bot: discord.Client):
+    for guild in bot.guilds:
+        await update_channel(bot, guild.id, "downloaded", "downloaded", color=discord.Color.green())
+
+async def update_watched_channel(bot: discord.Client):
+    for guild in bot.guilds:
+        await update_channel(bot, guild.id, "watched", "watched", color=discord.Color.purple())
+
+# === Backup ===
+def create_backup_zip(guild_id: int) -> Path:
+    src = Path(get_data_path(guild_id, "movies.json"))
+    zip_path = Path(f"backups/{guild_id}_backup.zip")
+    zip_path.parent.mkdir(parents=True, exist_ok=True)
+
+    with ZipFile(zip_path, "w") as zipf:
+        if src.exists():
+            zipf.write(src, arcname="movies.json")
+
+    return zip_path
+
+def load_movies() -> list:
+    return load_json(0, "movies.json")  # Default to guild_id = 0 for legacy
+
+def save_movies(movies: list):
+    save_json(0, "movies.json", movies)  # Same here
