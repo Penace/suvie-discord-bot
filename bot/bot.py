@@ -6,6 +6,7 @@ from dotenv import load_dotenv
 from openai import OpenAI
 from typing import Optional, cast
 
+# === Load .env ===
 load_dotenv()
 
 # === API KEYS ===
@@ -43,9 +44,12 @@ async def on_ready():
     except Exception as e:
         print(f"❌ Failed to sync commands: {type(e).__name__}: {e}")
 
-# === Load Cogs ===
+# === Load Cogs Safely ===
 async def load_cogs():
-    command_dir = "./commands"
+    base_dir = os.path.dirname(os.path.abspath(__file__))
+    command_dir = os.path.join(base_dir, "commands")
+    print(f"📂 Loading cogs from: {command_dir}")
+
     for filename in os.listdir(command_dir):
         if filename.endswith(".py"):
             module_name = filename[:-3]
@@ -62,7 +66,6 @@ async def main():
 
 if __name__ == "__main__":
     try:
-        # Fix for Windows event loop policy
         if os.name == "nt":
             asyncio.set_event_loop_policy(asyncio.WindowsSelectorEventLoopPolicy())
         asyncio.run(main())
