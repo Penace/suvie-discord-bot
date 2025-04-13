@@ -1,6 +1,8 @@
 import discord
 from discord import app_commands
 from discord.ext import commands
+from typing import Optional
+
 from utils.storage import (
     load_movies,
     save_movies,
@@ -19,7 +21,13 @@ class DownloadedCog(commands.GroupCog, name="downloaded"):
         imdb_id="The IMDb ID (optional).",
         filepath="Path to the downloaded file (optional)."
     )
-    async def add_downloaded(self, interaction: discord.Interaction, title: str, imdb_id: str = None, filepath: str = None):
+    async def add_downloaded(
+        self,
+        interaction: discord.Interaction,
+        title: str,
+        imdb_id: Optional[str] = None,
+        filepath: Optional[str] = None
+    ):
         await interaction.response.defer(ephemeral=True)
         movies = load_movies()
 
@@ -43,9 +51,13 @@ class DownloadedCog(commands.GroupCog, name="downloaded"):
             title=f"📥 Marked as Downloaded: {match['title']}{suffix}",
             color=discord.Color.gold()
         )
-        if match.get("filepath"): embed.add_field(name="File", value=match["filepath"], inline=False)
-        if match.get("imdb_url"): embed.add_field(name="IMDb", value=match["imdb_url"], inline=False)
-        if match.get("poster") and match["poster"] != "N/A": embed.set_thumbnail(url=match["poster"])
+        if match.get("filepath"):
+            embed.add_field(name="File", value=match["filepath"], inline=False)
+        if match.get("imdb_url"):
+            embed.add_field(name="IMDb", value=match["imdb_url"], inline=False)
+        if match.get("poster") and match["poster"] != "N/A":
+            embed.set_thumbnail(url=match["poster"])
+
         await interaction.followup.send(embed=embed, ephemeral=True)
 
     # === /downloaded edit ===
@@ -59,13 +71,13 @@ class DownloadedCog(commands.GroupCog, name="downloaded"):
         movies = load_movies()
         movie = get_movie_by_title(movies, title)
 
-        if not movie:
+        if not movie or movie.get("status") != "downloaded":
             await interaction.followup.send("❌ Movie not found in downloaded list.", ephemeral=True)
             return
 
         movie["filepath"] = filepath
         save_movies(movies)
-        await update_downloaded_channel(self.bot, movies)
+        await update_downloaded_channel(self.bot)
 
         embed = discord.Embed(
             title=f"✏️ Filepath Updated: {movie['title']}",
@@ -82,14 +94,14 @@ class DownloadedCog(commands.GroupCog, name="downloaded"):
         movies = load_movies()
         movie = get_movie_by_title(movies, title)
 
-        if not movie:
+        if not movie or movie.get("status") != "downloaded":
             await interaction.followup.send("❌ Movie not found in downloaded list.", ephemeral=True)
             return
 
         movie["status"] = "watchlist"
         movie.pop("filepath", None)
         save_movies(movies)
-        await update_downloaded_channel(self.bot, movies)
+        await update_downloaded_channel(self.bot)
 
         embed = discord.Embed(
             title=f"🗑️ Removed from Downloaded: {movie['title']}",
@@ -100,3 +112,4 @@ class DownloadedCog(commands.GroupCog, name="downloaded"):
 # === Cog Loader ===
 async def setup(bot: commands.Bot):
     await bot.add_cog(DownloadedCog(bot))
+    print("📁 Downloaded command loaded.")

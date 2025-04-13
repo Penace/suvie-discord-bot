@@ -1,11 +1,13 @@
 import os
 import requests
+from typing import Optional, Dict
 from dotenv import load_dotenv
 
 load_dotenv()
-OMDB_API_KEY = os.getenv("OMDB_API_KEY")
 
-def fetch_movie_data(imdb_id: str = None, title: str = None) -> dict:
+OMDB_API_KEY: Optional[str] = os.getenv("OMDB_API_KEY")
+
+def fetch_movie_data(imdb_id: Optional[str] = None, title: Optional[str] = None) -> Dict[str, Optional[str]]:
     if not OMDB_API_KEY:
         raise EnvironmentError("OMDB_API_KEY is not set in the .env file.")
 
@@ -15,13 +17,15 @@ def fetch_movie_data(imdb_id: str = None, title: str = None) -> dict:
     if imdb_id:
         params["i"] = imdb_id
     elif title:
-        params["t"] = title
+        params["t"] = title.strip()
     else:
         raise ValueError("Either imdb_id or title must be provided.")
 
-    response = requests.get(base_url, params=params)
-    if response.status_code != 200:
-        raise ConnectionError(f"OMDb API error: {response.status_code}")
+    try:
+        response = requests.get(base_url, params=params, timeout=5)
+        response.raise_for_status()
+    except requests.RequestException as e:
+        raise ConnectionError(f"OMDb request failed: {e}")
 
     data = response.json()
     if data.get("Response") != "True":
@@ -39,5 +43,5 @@ def fetch_movie_data(imdb_id: str = None, title: str = None) -> dict:
         "director": data.get("Director"),
         "actors": data.get("Actors"),
         "type": data.get("Type", "movie"),
-        "trailer": None  # Placeholder
+        "trailer": None  # Placeholder for future implementation
     }
