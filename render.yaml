@@ -1,0 +1,10 @@
+services:
+  - type: web
+    name: suvie-discord-bot
+    env: python
+    buildCommand: pip install -r bot/requirements.txt
+    startCommand: python bot/bot.py
+    envVars:
+      - key: DISCORD_TOKEN
+        sync: false
+    autoDeploy: true
