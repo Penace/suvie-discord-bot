@@ -1,6 +1,7 @@
 // deploy-to-gh-pages.js
 import fs from "fs-extra";
 import path from "path";
+import { execSync } from "child_process";
 
 const DIST_DIR = path.resolve("dist");
 const TARGET_DIR = path.resolve("../gh-pages");
@@ -15,9 +16,25 @@ async function deploy() {
       filter: (src) => !src.includes(".DS_Store"),
     });
 
-    console.log("✅ Done! Ready to commit gh-pages.");
+    console.log("🔁 Committing changes to gh-pages...");
+    execSync(`git add .`, { cwd: TARGET_DIR, stdio: "inherit" });
+    execSync(
+      `git commit -m "Deploy landing page" || echo "No changes to commit."`,
+      {
+        cwd: TARGET_DIR,
+        stdio: "inherit",
+      }
+    );
+
+    console.log("🚀 Pushing to remote...");
+    execSync(`git push origin gh-pages --force`, {
+      cwd: TARGET_DIR,
+      stdio: "inherit",
+    });
+
+    console.log("✅ Deployed to GitHub Pages!");
   } catch (err) {
-    console.error("❌ Deployment failed:", err);
+    console.error("❌ Deployment failed:", err.message || err);
   }
 }
 
