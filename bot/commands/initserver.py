@@ -19,6 +19,8 @@ class InitServerCog(commands.Cog):
     @app_commands.checks.has_permissions(administrator=True)
     async def initserver(self, interaction: discord.Interaction):
         await interaction.response.defer(ephemeral=True)
+        print("👀 Starting /initserver command")
+
 
         guild = interaction.guild
         if not guild:
@@ -29,12 +31,17 @@ class InitServerCog(commands.Cog):
         category = discord.utils.get(guild.categories, name="🎬 suvie")
         if not category:
             category = await guild.create_category("🎬 suvie")
+            print(f"📁 Using category: {category.name}")
 
         created = []
         for name in REQUIRED_CHANNELS:
-            if not discord.utils.get(guild.text_channels, name=name):
-                await guild.create_text_channel(name, category=category)
-                created.append(f"📁 #{name}")
+            try:
+                if not discord.utils.get(guild.text_channels, name=name):
+                    await guild.create_text_channel(name, category=category)
+                    created.append(f"📁 #{name}")
+                    print(f"✅ Created or verified #{name}")
+            except Exception as e:
+                print(f"❌ Failed to create #{name}: {e}")
 
         # Summary Embed
         embed = discord.Embed(
@@ -45,8 +52,7 @@ class InitServerCog(commands.Cog):
         for name in REQUIRED_CHANNELS:
             embed.add_field(name=f"#{name}", value="Ready ✅", inline=True)
 
-        await interaction.followup.send(embed=embed, ephemeral=True)
-
+        await interaction.followup.send("✅ Suvie setup command reached this point.", ephemeral=True)
 # === Cog Loader ===
 async def setup(bot: commands.Bot):
     await bot.add_cog(InitServerCog(bot))
