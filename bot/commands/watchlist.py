@@ -144,50 +144,80 @@ class WatchlistGroup(commands.GroupCog, name="watchlist"):
     @app_commands.command(name="remove", description="Remove a movie or show from your watchlist.")
     async def remove(self, interaction: discord.Interaction, title: str):
         await interaction.response.defer(ephemeral=True)
-        guild_id = interaction.guild_id or 0
+        print("🗑️ /watchlist remove triggered with title:", title)
 
-        with Session(engine) as session:
-            movie = session.query(Movie).filter_by(guild_id=guild_id, title=title, status="watchlist").first()
-            if not movie:
-                await interaction.followup.send("❌ Title not found in your watchlist.", ephemeral=True)
-                return
-            session.delete(movie)
-            session.commit()
-            print(f"🗑️ Deleted '{title}' from watchlist")
+        try:
+            from bot.models.movie import Movie
+            from bot.utils.database import engine
+            from sqlalchemy.orm import Session
 
-        await update_watchlist_channel(self.bot, guild_id)
-        await interaction.followup.send(f"🗑️ Removed **{title}** from your watchlist.", ephemeral=True)
+            guild_id = interaction.guild_id or 0
+
+            with Session(engine) as session:
+                movie = session.query(Movie).filter_by(guild_id=guild_id, title=title, status="watchlist").first()
+                if not movie:
+                    await interaction.followup.send("❌ Title not found in your watchlist.", ephemeral=True)
+                    return
+                session.delete(movie)
+                session.commit()
+                print(f"🗑️ Deleted '{title}' from watchlist")
+
+            await interaction.followup.send(f"🗑️ Removed **{title}** from your watchlist.", ephemeral=True)
+        except Exception as e:
+            print(f"❌ Error: {e}")
+            await interaction.followup.send(f"❌ DB Error: {e}", ephemeral=True)
 
     @app_commands.command(name="view", description="View your current watchlist.")
     async def view(self, interaction: discord.Interaction):
         await interaction.response.defer(ephemeral=True)
-        guild_id = interaction.guild_id or 0
-        watchlist = get_movies_by_status(guild_id, "watchlist")
+        print("👀 /watchlist view triggered")
 
-        if not watchlist:
-            await interaction.followup.send("📭 Your watchlist is empty.", ephemeral=True)
-            return
+        try:
+            from bot.models.movie import Movie
+            from bot.utils.database import engine
+            from sqlalchemy.orm import Session
+            from bot.utils.storage import get_movies_by_status, create_embed
 
-        for movie in watchlist:
-            embed = create_embed(movie, color=discord.Color.teal())
-            await interaction.followup.send(embed=embed, ephemeral=True)
+            guild_id = interaction.guild_id or 0
+            watchlist = get_movies_by_status(guild_id, "watchlist")
+
+            if not watchlist:
+                await interaction.followup.send("📭 Your watchlist is empty.", ephemeral=True)
+                return
+
+            for movie in watchlist:
+                embed = create_embed(movie, color=discord.Color.teal())
+                await interaction.followup.send(embed=embed, ephemeral=True)
+        except Exception as e:
+            print(f"❌ Error: {e}")
+            await interaction.followup.send(f"❌ DB Error: {e}", ephemeral=True)
 
     @app_commands.command(name="clear", description="Clear your watchlist completely.")
     async def clear(self, interaction: discord.Interaction):
         await interaction.response.defer(ephemeral=True)
-        guild_id = interaction.guild_id or 0
+        print("🧹 /watchlist clear triggered")
 
-        with Session(engine) as session:
-            deleted = session.query(Movie).filter_by(guild_id=guild_id, status="watchlist").delete()
-            session.commit()
-            print(f"🧹 Cleared {deleted} watchlist entries")
+        try:
+            from bot.models.movie import Movie
+            from bot.utils.database import engine
+            from sqlalchemy.orm import Session
+            from bot.utils.storage import update_watchlist_channel
 
-        if not deleted:
-            await interaction.followup.send("❌ Your watchlist is already empty.", ephemeral=True)
-        else:
-            await update_watchlist_channel(self.bot, guild_id)
-            await interaction.followup.send("✅ Watchlist cleared.", ephemeral=True)
+            guild_id = interaction.guild_id or 0
 
+            with Session(engine) as session:
+                deleted = session.query(Movie).filter_by(guild_id=guild_id, status="watchlist").delete()
+                session.commit()
+                print(f"🧹 Cleared {deleted} watchlist entries")
+
+            if not deleted:
+                await interaction.followup.send("❌ Your watchlist is already empty.", ephemeral=True)
+            else:
+                await update_watchlist_channel(self.bot, guild_id)
+                await interaction.followup.send("✅ Watchlist cleared.", ephemeral=True)
+        except Exception as e:
+            print(f"❌ Error: {e}")
+            await interaction.followup.send(f"❌ DB Error: {e}", ephemeral=True)
 
 # === Cog Loader ===
 async def setup(bot: commands.Bot):
