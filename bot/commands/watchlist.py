@@ -41,7 +41,7 @@ class WatchlistGroup(commands.GroupCog, name="watchlist"):
             print("📦 OMDb response:", movie_data)
 
             new_movie = Movie(
-                guild_id=interaction.guild_id or 0,
+                guild_id=str(interaction.guild_id or 0),
                 title=movie_data["title"],
                 year=movie_data.get("year"),
                 genre=movie_data.get("genre"),
@@ -178,7 +178,7 @@ class WatchlistGroup(commands.GroupCog, name="watchlist"):
             from sqlalchemy.orm import Session
             from bot.utils.storage import get_movies_by_status, create_embed
 
-            guild_id = interaction.guild_id or 0
+            guild_id = str(interaction.guild_id or 0)
             watchlist = get_movies_by_status(guild_id, "watchlist")
 
             if not watchlist:
@@ -203,7 +203,7 @@ class WatchlistGroup(commands.GroupCog, name="watchlist"):
             from sqlalchemy.orm import Session
             from bot.utils.storage import update_watchlist_channel
 
-            guild_id = interaction.guild_id or 0
+            guild_id = str(interaction.guild_id or 0)
 
             with Session(engine) as session:
                 deleted = session.query(Movie).filter_by(guild_id=guild_id, status="watchlist").delete()
