@@ -60,7 +60,7 @@ def get_movie_by_title(guild_id: int, title: str) -> Optional[Movie]:
             )
         )
 
-def get_movies_by_status(guild_id: int, status: str) -> List[Movie]:
+def get_movies_by_status(guild_id: str, status: str) -> List[Movie]:
     with Session(engine) as session:
         return session.scalars(
             select(Movie).where(
