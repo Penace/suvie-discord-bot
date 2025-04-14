@@ -12,9 +12,9 @@ class ReloadCog(commands.Cog):
     async def reload(self, interaction: discord.Interaction, target: str):
         await interaction.response.defer(ephemeral=True)
 
-        path = Path("commands")
+        path = Path("bot/commands")
         if not path.exists():
-            await interaction.followup.send("❌ The `commands/` folder does not exist.", ephemeral=True)
+            await interaction.followup.send("❌ The `bot/commands/` folder does not exist.", ephemeral=True)
             return
 
         available = [f.stem for f in path.glob("*.py") if not f.stem.startswith("__")]
@@ -23,7 +23,7 @@ class ReloadCog(commands.Cog):
         if target == "all":
             reloaded, loaded, failed = [], [], []
             for cog in available:
-                full_path = f"commands.{cog}"
+                full_path = f"bot/commands.{cog}"
                 try:
                     await self.bot.reload_extension(full_path)
                     reloaded.append(cog)
@@ -51,7 +51,7 @@ class ReloadCog(commands.Cog):
         matches = [c for c in available if c.lower() == target]
         if matches:
             cog = matches[0]
-            full_path = f"commands.{cog}"
+            full_path = f"bot/commands.{cog}"
             try:
                 await self.bot.reload_extension(full_path)
                 status = "🔄 Reloaded"
@@ -70,7 +70,7 @@ class ReloadCog(commands.Cog):
             )
             await interaction.followup.send(embed=embed, ephemeral=True)
         else:
-            await interaction.followup.send(f"❌ Cog `{target}` not found in `commands/`.", ephemeral=True)
+            await interaction.followup.send(f"❌ Cog `{target}` not found in `bot/commands/`.", ephemeral=True)
 
 # === Cog Loader ===
 async def setup(bot: commands.Bot):
