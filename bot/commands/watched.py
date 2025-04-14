@@ -6,8 +6,8 @@ from typing import Optional
 from sqlalchemy.orm import Session
 
 from models.movie import Movie
-from utils.database import engine
-from utils.storage import (
+from bot.utils.database import engine
+from bot.utils.storage import (
     update_watched_channel
 )
 

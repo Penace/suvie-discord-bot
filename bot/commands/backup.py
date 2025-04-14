@@ -8,7 +8,7 @@ from zipfile import ZipFile
 from sqlalchemy.orm import Session
 
 from models.movie import Movie
-from utils.database import engine
+from bot.utils.database import engine
 
 
 class BackupCog(commands.Cog):

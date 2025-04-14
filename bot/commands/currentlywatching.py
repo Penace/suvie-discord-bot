@@ -5,8 +5,8 @@ from typing import Optional
 from sqlalchemy.orm import Session
 
 from models.movie import Movie
-from utils.database import engine
-from utils.storage import (
+from bot.utils.database import engine
+from bot.utils.storage import (
     get_movie_by_title,
     get_currently_watching_movies,
     update_currently_watching_channel,

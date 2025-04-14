@@ -5,14 +5,14 @@ from typing import Optional
 from sqlalchemy.orm import Session
 
 from models.movie import Movie
-from utils.database import engine
-from utils.storage import (
+from bot.utils.database import engine
+from bot.utils.storage import (
     get_movie_by_title,
     get_movies_by_status,
     update_watchlist_channel,
     create_embed
 )
-from utils.imdb import fetch_movie_model  # ✅ Use model-based fetch
+from bot.utils.imdb import fetch_movie_model  # ✅ Use model-based fetch
 
 class WatchlistGroup(commands.GroupCog, name="watchlist"):
     def __init__(self, bot: commands.Bot):

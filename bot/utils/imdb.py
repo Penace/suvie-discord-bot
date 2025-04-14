@@ -3,7 +3,7 @@ import requests
 from typing import Optional, Dict
 from dotenv import load_dotenv
 
-from models.movie import Movie
+from bot.models.movie import Movie
 
 load_dotenv()
 

@@ -6,8 +6,8 @@ from sqlalchemy import select
 from pathlib import Path
 from typing import Optional, List
 
-from utils.database import engine
-from models.movie import Movie
+from bot.utils.database import engine
+from bot.models.movie import Movie
 
 BACKUP_DIR = Path("backups/json")
 

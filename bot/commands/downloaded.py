@@ -6,8 +6,8 @@ from sqlalchemy.orm import Session
 from sqlalchemy import func
 
 from models.movie import Movie
-from utils.database import engine
-from utils.storage import update_downloaded_channel
+from bot.utils.database import engine
+from bot.utils.storage import update_downloaded_channel
 
 class DownloadedCog(commands.GroupCog, name="downloaded"):
     def __init__(self, bot: commands.Bot):
