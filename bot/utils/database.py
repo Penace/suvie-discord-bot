@@ -13,7 +13,7 @@ if not DATABASE_URL:
 
 # ✅ SQLAlchemy setup
 engine = create_engine(DATABASE_URL, echo=False)
-SessionLocal = sessionmaker(bind=engine)
+SessionLocal = sessionmaker(bind=engine, expire_on_commit=False)
 Base = declarative_base()
 
 def get_db():
