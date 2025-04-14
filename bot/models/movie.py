@@ -1,5 +1,5 @@
 from sqlalchemy import Column, Integer, String, Text
-from utils.database import Base
+from bot.utils.database import Base
 
 class Movie(Base):
     __tablename__ = "movies"
