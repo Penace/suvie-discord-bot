@@ -59,7 +59,10 @@ class WatchlistGroup(commands.GroupCog, name="watchlist"):
             with Session(engine) as session:
                 session.add(new_movie)
                 session.commit()
-                print("💾 Saved movie to database.")
+                
+                # Access the needed fields while the session is still alive
+                movie_title = new_movie.title
+                print("💾 Saved movie to database:", movie_title)
 
             await interaction.followup.send(f"✅ **{new_movie.title}** added to your watchlist.", ephemeral=True)
 
