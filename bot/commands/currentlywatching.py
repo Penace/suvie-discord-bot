@@ -1,13 +1,16 @@
 import sys
 import os
-sys.path.append(os.path.dirname(os.path.abspath(__file__)))
-sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
 import discord
 from discord.ext import commands
 from discord import app_commands
 from typing import Optional
 from sqlalchemy.orm import Session
 
+# === Fix import path for local + prod ===
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "..")))
+print(f"🔍 PYTHONPATH: {sys.path[-1]}")
+
+# === Local Imports ===
 from bot.models.movie import Movie
 from bot.utils.database import engine
 from bot.utils.storage import (
@@ -22,18 +25,10 @@ class CurrentlyWatchingCog(commands.GroupCog, name="currentlywatching"):
         self.bot = bot
 
     @app_commands.command(name="set", description="Set the currently watching title (movie or TV).")
-    @app_commands.describe(
-        title="The title you're watching.",
-        imdb_id="The IMDb ID (optional).",
-        season="Season number (for series)",
-        episode="Episode number (for series)",
-        timestamp="Time (e.g., 00:45:32)",
-        filepath="Optional file path"
-    )
     async def set(
         self,
         interaction: discord.Interaction,
-        title: Optional[str] = None,
+        title: str,
         imdb_id: Optional[str] = None,
         season: Optional[int] = None,
         episode: Optional[int] = None,
@@ -41,8 +36,8 @@ class CurrentlyWatchingCog(commands.GroupCog, name="currentlywatching"):
         filepath: Optional[str] = None
     ):
         await interaction.response.defer(ephemeral=True)
-        guild_id = interaction.guild_id or 0
-        movie = get_movie_by_title(guild_id, title or "")
+        guild_id = str(interaction.guild_id or 0)
+        movie = get_movie_by_title(guild_id, title)
 
         if not movie:
             await interaction.followup.send("❌ Title not found in your library.", ephemeral=True)
@@ -62,8 +57,7 @@ class CurrentlyWatchingCog(commands.GroupCog, name="currentlywatching"):
             session.merge(movie)
             session.commit()
 
-        await update_currently_watching_channel(self.bot, guild_id)
-
+        await update_currently_watching_channel(self.bot, interaction.guild_id)
         suffix = f" (S{int(movie.season):02}E{int(movie.episode):02})" if movie.type == "series" else ""
         await interaction.followup.send(f"🎬 Set **{movie.title}{suffix}** as currently watching.", ephemeral=True)
 
@@ -78,7 +72,7 @@ class CurrentlyWatchingCog(commands.GroupCog, name="currentlywatching"):
         filepath: Optional[str] = None
     ):
         await interaction.response.defer(ephemeral=True)
-        guild_id = interaction.guild_id or 0
+        guild_id = str(interaction.guild_id or 0)
         movie = get_movie_by_title(guild_id, title)
 
         if not movie:
@@ -101,14 +95,14 @@ class CurrentlyWatchingCog(commands.GroupCog, name="currentlywatching"):
             session.merge(movie)
             session.commit()
 
-        await update_currently_watching_channel(self.bot, guild_id)
+        await update_currently_watching_channel(self.bot, interaction.guild_id)
         suffix = f" (S{int(movie.season):02}E{int(movie.episode):02})" if movie.type == "series" else ""
         await interaction.followup.send(f"🔁 Updated **{movie.title}{suffix}**.", ephemeral=True)
 
     @app_commands.command(name="next", description="Advance to the next episode of a show.")
     async def next(self, interaction: discord.Interaction, title: str):
         await interaction.response.defer(ephemeral=True)
-        guild_id = interaction.guild_id or 0
+        guild_id = str(interaction.guild_id or 0)
         movie = get_movie_by_title(guild_id, title)
 
         if not movie:
@@ -126,13 +120,13 @@ class CurrentlyWatchingCog(commands.GroupCog, name="currentlywatching"):
             session.merge(movie)
             session.commit()
 
-        await update_currently_watching_channel(self.bot, guild_id)
+        await update_currently_watching_channel(self.bot, interaction.guild_id)
         await interaction.followup.send(f"⏭️ Now watching **{movie.title} S{int(movie.season):02}E{int(movie.episode):02}**", ephemeral=True)
 
     @app_commands.command(name="view", description="View all currently watching movies or shows.")
     async def view(self, interaction: discord.Interaction):
         await interaction.response.defer(ephemeral=True)
-        guild_id = interaction.guild_id or 0
+        guild_id = str(interaction.guild_id or 0)
         currently_watching = get_currently_watching_movies(guild_id)
 
         if not currently_watching:
@@ -146,7 +140,7 @@ class CurrentlyWatchingCog(commands.GroupCog, name="currentlywatching"):
     @app_commands.command(name="remove", description="Remove a title from your currently watching list.")
     async def remove(self, interaction: discord.Interaction, title: str):
         await interaction.response.defer(ephemeral=True)
-        guild_id = interaction.guild_id or 0
+        guild_id = str(interaction.guild_id or 0)
         movie = get_movie_by_title(guild_id, title)
 
         if not movie or movie.status != "currently-watching":
@@ -159,7 +153,7 @@ class CurrentlyWatchingCog(commands.GroupCog, name="currentlywatching"):
             session.merge(movie)
             session.commit()
 
-        await update_currently_watching_channel(self.bot, guild_id)
+        await update_currently_watching_channel(self.bot, interaction.guild_id)
         await interaction.followup.send(f"🗑️ Removed **{movie.title}** from your currently watching list.", ephemeral=True)
 
 # === Cog Loader ===
