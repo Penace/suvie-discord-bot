@@ -30,7 +30,15 @@ class WatchlistGroup(commands.GroupCog, name="watchlist"):
     async def add(self, interaction: discord.Interaction, title: str):
         await interaction.response.defer(ephemeral=True)
         print("✅ /watchlist add triggered with title:", title)
-        await interaction.followup.send(f"Title received: **{title}**", ephemeral=True)
+
+        try:
+            from bot.utils.imdb import fetch_movie_data
+            movie_data = fetch_movie_data(title=title)
+            print("📦 OMDb response:", movie_data)
+            await interaction.followup.send(f"✅ Fetched movie: **{movie_data['title']}**", ephemeral=True)
+        except Exception as e:
+            print(f"❌ Error fetching OMDb: {e}")
+            await interaction.followup.send(f"❌ Error: {e}", ephemeral=True)
     # async def add(
     #     self,
     #     interaction: discord.Interaction,
