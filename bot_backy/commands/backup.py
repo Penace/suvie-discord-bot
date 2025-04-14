@@ -11,7 +11,7 @@ from pathlib import Path
 from zipfile import ZipFile
 from sqlalchemy.orm import Session
 
-from bot.models.movie import Movie
+from models.movie import Movie
 from bot.utils.database import engine
 
 

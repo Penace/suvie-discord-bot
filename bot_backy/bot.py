@@ -46,16 +46,17 @@ async def on_ready():
 
 # === Load Cogs ===
 async def load_cogs():
-    command_dir = os.path.join(os.path.dirname(__file__), "commands")
-    print(f"📂 Loading cogs from: {command_dir}")
+    # command_dir = os.path.join(os.path.dirname(__file__), "commands")
+    # print(f"📂 Loading cogs from: {command_dir}")
 
-    for filename in os.listdir(command_dir):
-        if filename.endswith(".py") and not filename.startswith("__"):
-            module_name = filename[:-3]
-            try:
-                await bot.load_extension(f"bot.commands.{module_name}")
-            except Exception as e:
-                print(f"⚠️ Failed to load {module_name}: {type(e).__name__}: {e}")
+    # for filename in os.listdir(command_dir):
+    #     if filename.endswith(".py") and not filename.startswith("__"):
+    #         module_name = filename[:-3]
+    #         try:
+    #             await bot.load_extension(f"commands.{module_name}")
+    #         except Exception as e:
+    #             print(f"⚠️ Failed to load {module_name}: {type(e).__name__}: {e}")
+    await bot.load_extension("bot.commands.watchlist")
 
 # === Main Entrypoint ===
 async def main():

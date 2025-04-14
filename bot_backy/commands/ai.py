@@ -10,7 +10,7 @@ from dotenv import load_dotenv
 from typing import Optional, Dict, List
 from openai.types.chat import ChatCompletionMessageParam
 
-from bot.utils.storage import get_or_create_text_channel  # Channel creation helper
+from utils.storage import get_or_create_text_channel  # Channel creation helper
 
 load_dotenv()
 client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))

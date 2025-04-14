@@ -9,9 +9,9 @@ from datetime import datetime
 import platform
 
 from sqlalchemy.orm import Session
-from bot.utils.database import SessionLocal
-from bot.models.movie import Movie
-from bot.utils.storage import get_or_create_text_channel
+from utils.database import SessionLocal
+from models.movie import Movie
+from utils.storage import get_or_create_text_channel
 
 class StatusCog(commands.Cog):
     def __init__(self, bot: commands.Bot):

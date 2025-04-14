@@ -5,9 +5,9 @@ from datetime import datetime
 from typing import Optional
 from sqlalchemy.orm import Session
 
-from bot.models.movie import Movie
-from bot.utils.database import engine
-from bot.utils.storage import (
+from models.movie import Movie
+from utils.database import engine
+from utils.storage import (
     update_watched_channel
 )
 

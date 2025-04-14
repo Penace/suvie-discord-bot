@@ -8,9 +8,9 @@ from discord import app_commands
 from typing import Optional
 from sqlalchemy.orm import Session
 
-from bot.models.movie import Movie
-from bot.utils.database import engine
-from bot.utils.storage import (
+from models.movie import Movie
+from utils.database import engine
+from utils.storage import (
     get_movie_by_title,
     get_currently_watching_movies,
     update_currently_watching_channel,
