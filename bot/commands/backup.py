@@ -1,8 +1,15 @@
 import discord
 from discord.ext import commands
 from discord import app_commands
+import json
+from datetime import datetime
+from pathlib import Path
+from zipfile import ZipFile
+from sqlalchemy.orm import Session
 
-from utils.storage import create_backup_zip
+from models.movie import Movie
+from utils.database import engine
+
 
 class BackupCog(commands.Cog):
     def __init__(self, bot: commands.Bot):
@@ -17,14 +24,33 @@ class BackupCog(commands.Cog):
             await interaction.followup.send("❌ This command must be used in a server.", ephemeral=True)
             return
 
-        zip_path = create_backup_zip(guild_id)
+        # === Export movie data from DB ===
+        with Session(engine) as session:
+            movies = session.query(Movie).filter_by(guild_id=guild_id).all()
+            data = [m.to_dict() for m in movies]
 
-        if not zip_path.exists():
-            await interaction.followup.send("❌ Backup failed to generate.", ephemeral=True)
-            return
+        # === Create temp .json file ===
+        timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+        temp_dir = Path("temp_backups")
+        temp_dir.mkdir(exist_ok=True)
+        json_path = temp_dir / f"suvie_backup_{guild_id}_{timestamp}.json"
+        with open(json_path, "w", encoding="utf-8") as f:
+            json.dump(data, f, indent=4, ensure_ascii=False)
 
+        # === Zip it ===
+        zip_path = temp_dir / f"suvie_backup_{guild_id}_{timestamp}.zip"
+        with ZipFile(zip_path, "w") as zipf:
+            zipf.write(json_path, arcname=json_path.name)
+
+        # === Cleanup json after zipping ===
+        json_path.unlink()
+
+        # === Upload to Discord ===
         file = discord.File(fp=zip_path, filename=zip_path.name)
         await interaction.followup.send(content="📦 Here is your latest backup:", file=file, ephemeral=True)
+
+        # === Optional cleanup ===
+        zip_path.unlink()
 
 # === Cog Loader ===
 async def setup(bot: commands.Bot):

@@ -1,133 +1,128 @@
-import os
-import json
 import discord
-import shutil
-from pathlib import Path
-from zipfile import ZipFile
 from datetime import datetime
-from typing import Union, Optional
+from zipfile import ZipFile
+from sqlalchemy.orm import Session
+from sqlalchemy import select
+from pathlib import Path
+from typing import Optional, List
 
-# === Constants ===
-DATA_DIR = Path("bot/data")
+from utils.database import engine
+from models.movie import Movie
+
 BACKUP_DIR = Path("backups/json")
-BACKUP_DIR.mkdir(parents=True, exist_ok=True)
 
-# === Core File Utilities ===
+# === Load & Save ===
 
-def get_data_path(guild_id: int, file_name: str) -> Path:
-    guild_dir = DATA_DIR / str(guild_id)
-    guild_dir.mkdir(parents=True, exist_ok=True)
-    return guild_dir / file_name
+def load_movies(guild_id: int) -> List[Movie]:
+    with Session(engine) as session:
+        result = session.scalars(select(Movie).where(Movie.guild_id == guild_id)).all()
+        return result
 
-def load_json(guild_id: int, file_name: str) -> list:
-    path = get_data_path(guild_id, file_name)
-    if not path.exists():
-        return []
-    try:
-        with path.open("r", encoding="utf-8") as f:
-            return json.load(f)
-    except json.JSONDecodeError:
-        return []
+def save_movie(movie: Movie):
+    with Session(engine) as session:
+        session.add(movie)
+        session.commit()
 
-def save_json(guild_id: int, file_name: str, data: list):
-    path = get_data_path(guild_id, file_name)
-    with path.open("w", encoding="utf-8") as f:
-        json.dump(data, f, indent=4, ensure_ascii=False)
+def delete_movie(guild_id: int, title: str) -> bool:
+    with Session(engine) as session:
+        result = session.scalar(
+            select(Movie).where(
+                Movie.guild_id == guild_id,
+                Movie.title.ilike(title)
+            )
+        )
+        if result:
+            session.delete(result)
+            session.commit()
+            return True
+        return False
 
-# === Movies I/O ===
-
-def load_movies(guild_id: int) -> list:
-    return load_json(guild_id, "movies.json")
-
-def save_movies(guild_id: int, movies: list):
-    save_json(guild_id, "movies.json", movies)
-    # Backup for safety
-    timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
-    backup_file = BACKUP_DIR / f"movies_{guild_id}_{timestamp}.json"
-    shutil.copy(get_data_path(guild_id, "movies.json"), backup_file)
-    limit_json_backups(BACKUP_DIR, prefix=f"movies_{guild_id}_", max_versions=5)
-
-def limit_json_backups(directory: Union[str, Path], prefix: str, max_versions: int = 5):
-    path = Path(directory)
-    files = sorted(path.glob(f"{prefix}*.json"), key=os.path.getmtime, reverse=True)
-    for f in files[max_versions:]:
-        f.unlink()
+def clear_movies_by_status(guild_id: int, status: str):
+    with Session(engine) as session:
+        movies = session.scalars(
+            select(Movie).where(
+                Movie.guild_id == guild_id,
+                Movie.status == status
+            )
+        ).all()
+        for m in movies:
+            session.delete(m)
+        session.commit()
 
 # === Filters ===
 
-def get_movie_by_title(movies: list, title: str) -> Optional[dict]:
-    return next((m for m in movies if m.get("title", "").lower() == title.lower()), None)
+def get_movie_by_title(guild_id: int, title: str) -> Optional[Movie]:
+    with Session(engine) as session:
+        return session.scalar(
+            select(Movie).where(
+                Movie.guild_id == guild_id,
+                Movie.title.ilike(title)
+            )
+        )
 
-def get_movies_by_status(movies: list, status: str) -> list:
-    return [m for m in movies if m.get("status") == status]
+def get_movies_by_status(guild_id: int, status: str) -> List[Movie]:
+    with Session(engine) as session:
+        return session.scalars(
+            select(Movie).where(
+                Movie.guild_id == guild_id,
+                Movie.status == status
+            )
+        ).all()
 
-def get_currently_watching_movies(movies: list) -> list:
-    return get_movies_by_status(movies, "currently-watching")
+def get_currently_watching_movies(guild_id: int) -> List[Movie]:
+    return get_movies_by_status(guild_id, "currently-watching")
 
 # === Embeds ===
 
-def create_embed(movie: dict, title_prefix: str = "", color=discord.Color.teal()) -> discord.Embed:
-    title = movie["title"]
-    if movie.get("type") == "series":
-        season = movie.get("season", 1)
-        episode = movie.get("episode", 1)
-        title = f"{title} (S{int(season):02}E{int(episode):02})"
+def create_embed(movie: Movie, title_prefix="", color=discord.Color.teal()) -> discord.Embed:
+    title = movie.title
+    if movie.type == "series":
+        season = int(movie.season or 1)
+        episode = int(movie.episode or 1)
+        title = f"{title} (S{season:02}E{episode:02})"
 
     embed = discord.Embed(title=f"{title_prefix}{title}", color=color)
 
-    if movie.get("poster") and movie["poster"] != "N/A":
-        embed.set_thumbnail(url=movie["poster"])
+    if movie.poster and movie.poster != "N/A":
+        embed.set_thumbnail(url=movie.poster)
 
     for key in ["genre", "year", "filepath", "timestamp", "imdb_url"]:
-        value = movie.get(key)
+        value = getattr(movie, key, None)
         if value:
             name = key.capitalize() if key != "imdb_url" else "IMDb"
             embed.add_field(name=name, value=value, inline=(key != "filepath"))
 
     return embed
 
-# === Channel Management ===
+# === Channel Updates ===
 
-async def get_or_create_text_channel(bot: discord.Client, guild: discord.Guild, name: str) -> Optional[discord.TextChannel]:
-    existing = discord.utils.get(guild.text_channels, name=name)
-    if existing:
-        return existing
-
-    category = discord.utils.get(guild.categories, name="🎬 suvie")
-    if not category:
-        category = await guild.create_category("🎬 suvie")
-
-    try:
-        return await guild.create_text_channel(name=name, category=category)
-    except Exception as e:
-        print(f"❌ Failed to create channel '{name}': {e}")
-        return None
-
-# === Channel Update Logic ===
-
-async def update_channel(bot: discord.Client, guild_id: int, channel_name: str, status: str, title_prefix: str = "", color=discord.Color.teal()):
-    movies = load_movies(guild_id)
+async def update_channel(bot: discord.Client, guild_id: int, channel_name: str, status: str, title_prefix="", color=discord.Color.teal()):
     guild = bot.get_guild(guild_id)
     if not guild:
-        print(f"⚠️ Guild not found: {guild_id}")
+        print("⚠️ Guild not found.")
         return
 
-    channel = await get_or_create_text_channel(bot, guild, channel_name)
+    channel = discord.utils.get(guild.text_channels, name=channel_name)
     if not channel:
-        return
+        try:
+            category = discord.utils.get(guild.categories, name="🎬 suvie")
+            if not category:
+                category = await guild.create_category("🎬 suvie")
+            channel = await guild.create_text_channel(channel_name, category=category)
+        except Exception as e:
+            print(f"❌ Failed to create channel {channel_name}: {e}")
+            return
 
     await channel.purge(limit=10)
-    filtered = get_movies_by_status(movies, status)
+    movies = get_movies_by_status(guild_id, status)
 
-    if not filtered:
+    if not movies:
         await channel.send("📭 Nothing to show here.")
         return
 
-    for movie in filtered:
+    for movie in movies:
         embed = create_embed(movie, title_prefix, color)
         await channel.send(embed=embed)
-
-# === Public Channel Updaters ===
 
 async def update_watchlist_channel(bot: discord.Client, guild_id: int):
     await update_channel(bot, guild_id, "watchlist", "watchlist", color=discord.Color.teal())
@@ -141,14 +136,25 @@ async def update_downloaded_channel(bot: discord.Client, guild_id: int):
 async def update_watched_channel(bot: discord.Client, guild_id: int):
     await update_channel(bot, guild_id, "watched", "watched", color=discord.Color.purple())
 
-# === Backup Command ===
+# === Backup ===
 
-def create_backup_zip() -> Path:
+def create_backup_zip():
     zip_path = Path("backups/backup.zip")
     zip_path.parent.mkdir(parents=True, exist_ok=True)
     with ZipFile(zip_path, "w") as zipf:
-        for guild_dir in DATA_DIR.iterdir():
-            if guild_dir.is_dir():
-                for f in guild_dir.glob("*.json"):
-                    zipf.write(f, arcname=f"{guild_dir.name}/{f.name}")
+        # You can dump raw SQL here later if needed
+        pass
     return zip_path
+
+async def get_or_create_text_channel(bot: discord.Client, guild: discord.Guild, name: str) -> discord.TextChannel:
+    existing = discord.utils.get(guild.text_channels, name=name)
+    if existing:
+        return existing
+    try:
+        category = discord.utils.get(guild.categories, name="🎬 suvie")
+        if not category:
+            category = await guild.create_category("🎬 suvie")
+        return await guild.create_text_channel(name, category=category)
+    except Exception as e:
+        print(f"[Channel Creation Error] {type(e).__name__}: {e}")
+        return None

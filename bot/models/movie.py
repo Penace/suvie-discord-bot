@@ -1,5 +1,5 @@
 from sqlalchemy import Column, Integer, String, Text
-from bot.utils.database import Base
+from utils.database import Base
 
 class Movie(Base):
     __tablename__ = "movies"
@@ -22,3 +22,25 @@ class Movie(Base):
     timestamp = Column(String, nullable=True)
     filepath = Column(String, nullable=True)
     status = Column(String, index=True)
+    
+    def to_dict(self):
+        return {
+            "id": self.id,
+            "guild_id": self.guild_id,
+            "title": self.title,
+            "year": self.year,
+            "genre": self.genre,
+            "plot": self.plot,
+            "poster": self.poster,
+            "imdb_url": self.imdb_url,
+            "imdb_id": self.imdb_id,
+            "imdb_rating": self.imdb_rating,
+            "director": self.director,
+            "actors": self.actors,
+            "type": self.type,
+            "season": self.season,
+            "episode": self.episode,
+            "timestamp": self.timestamp,
+            "filepath": self.filepath,
+            "status": self.status,
+        }

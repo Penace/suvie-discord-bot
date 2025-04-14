@@ -3,9 +3,12 @@ import requests
 from typing import Optional, Dict
 from dotenv import load_dotenv
 
+from models.movie import Movie
+
 load_dotenv()
 
 OMDB_API_KEY: Optional[str] = os.getenv("OMDB_API_KEY")
+
 
 def fetch_movie_data(imdb_id: Optional[str] = None, title: Optional[str] = None) -> Dict[str, Optional[str]]:
     if not OMDB_API_KEY:
@@ -46,3 +49,36 @@ def fetch_movie_data(imdb_id: Optional[str] = None, title: Optional[str] = None)
         "type": data.get("Type", "movie").lower(),
         "trailer": None  # 📺 Placeholder for future trailer fetching
     }
+
+
+# ✅ NEW: Return a Movie model instance directly
+def fetch_movie_model(
+    imdb_id: Optional[str] = None,
+    title: Optional[str] = None,
+    guild_id: Optional[int] = None,
+    status: str = "watchlist",
+    season: Optional[int] = None,
+    episode: Optional[int] = None,
+    filepath: Optional[str] = None
+) -> Movie:
+    data = fetch_movie_data(imdb_id=imdb_id, title=title)
+
+    return Movie(
+        guild_id=str(guild_id or 0),
+        title=data.get("title"),
+        year=data.get("year"),
+        genre=data.get("genre"),
+        plot=data.get("plot"),
+        poster=data.get("poster"),
+        imdb_url=data.get("imdb_url"),
+        imdb_id=data.get("imdb_id"),
+        imdb_rating=data.get("imdb_rating"),
+        director=data.get("director"),
+        actors=data.get("actors"),
+        type=data.get("type", "movie"),
+        season=season if data.get("type") == "series" else None,
+        episode=episode if data.get("type") == "series" else None,
+        timestamp=None,
+        filepath=filepath,
+        status=status
+    )

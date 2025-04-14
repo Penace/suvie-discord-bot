@@ -3,13 +3,13 @@ from discord.ext import commands
 from discord import app_commands
 from datetime import datetime
 from typing import Optional
+from sqlalchemy.orm import Session
 
+from models.movie import Movie
+from utils.database import engine
 from utils.storage import (
-    load_json, save_json,
-    get_movie_by_title, update_watched_channel
+    update_watched_channel
 )
-
-MOVIES_FILE = "movies.json"
 
 class WatchedCog(commands.Cog):
     def __init__(self, bot: commands.Bot):
@@ -29,45 +29,40 @@ class WatchedCog(commands.Cog):
         filepath: Optional[str] = None
     ):
         await interaction.response.defer(ephemeral=True)
-
         guild_id = interaction.guild_id
         if guild_id is None:
             await interaction.followup.send("❌ This command must be run in a server.", ephemeral=True)
             return
 
-        movies = load_json(guild_id, MOVIES_FILE)
-        movie = get_movie_by_title(movies, title)
+        with Session(engine) as session:
+            movie = session.query(Movie).filter_by(guild_id=guild_id, title=title).first()
+            if not movie:
+                await interaction.followup.send("❌ Movie not found in your library.", ephemeral=True)
+                return
 
-        if not movie:
-            await interaction.followup.send("❌ Movie not found in your library.", ephemeral=True)
-            return
+            movie.status = "watched"
+            movie.timestamp = timestamp or datetime.now().strftime("%H:%M:%S")
+            if filepath:
+                movie.filepath = filepath
+            session.commit()
 
-        # Update status
-        movie["status"] = "watched"
-        movie["timestamp"] = timestamp or datetime.now().strftime("%H:%M:%S")
-        if filepath:
-            movie["filepath"] = filepath
+            embed = discord.Embed(
+                title=f"✅ Marked as Watched: {movie.title}",
+                color=discord.Color.from_rgb(255, 105, 180)
+            )
+            embed.add_field(name="Watched At", value=movie.timestamp, inline=True)
+            if movie.year:
+                embed.add_field(name="Year", value=movie.year, inline=True)
+            if movie.genre:
+                embed.add_field(name="Genre", value=movie.genre, inline=True)
+            if movie.filepath:
+                embed.add_field(name="File Path", value=movie.filepath, inline=False)
+            if movie.imdb_url:
+                embed.add_field(name="IMDb", value=movie.imdb_url, inline=False)
+            if movie.poster and movie.poster != "N/A":
+                embed.set_thumbnail(url=movie.poster)
 
-        save_json(guild_id, MOVIES_FILE, movies)
         await update_watched_channel(self.bot, guild_id)
-
-        # Confirmation Embed
-        embed = discord.Embed(
-            title=f"✅ Marked as Watched: {movie['title']}",
-            color=discord.Color.from_rgb(255, 105, 180)
-        )
-        embed.add_field(name="Watched At", value=movie["timestamp"], inline=True)
-        if movie.get("year"):
-            embed.add_field(name="Year", value=movie["year"], inline=True)
-        if movie.get("genre"):
-            embed.add_field(name="Genre", value=movie["genre"], inline=True)
-        if filepath:
-            embed.add_field(name="File Path", value=filepath or "N/A", inline=False)
-        if movie.get("imdb_url"):
-            embed.add_field(name="IMDb", value=movie["imdb_url"], inline=False)
-        if movie.get("poster") and movie["poster"] != "N/A":
-            embed.set_thumbnail(url=movie["poster"])
-
         await interaction.followup.send(embed=embed, ephemeral=True)
 
 # === Cog Loader ===

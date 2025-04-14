@@ -21,7 +21,7 @@ class ReloadCog(commands.Cog):
         target = target.lower()
 
         if target == "all":
-            reloaded, loaded = [], []
+            reloaded, loaded, failed = [], [], []
             for cog in available:
                 full_path = f"commands.{cog}"
                 try:
@@ -32,14 +32,22 @@ class ReloadCog(commands.Cog):
                         await self.bot.load_extension(full_path)
                         loaded.append(cog)
                     except Exception as e:
-                        print(f"❌ Failed to load {cog}: {e}")
+                        failed.append(f"{cog} ❌ ({type(e).__name__})")
+                        print(f"[Reload] ❌ Failed to load {cog}: {e}")
+                except Exception as e:
+                    failed.append(f"{cog} ❌ ({type(e).__name__})")
+                    print(f"[Reload] ❌ Failed to reload {cog}: {e}")
 
-            embed = discord.Embed(title="🔁 All Cogs Processed", color=discord.Color.blurple())
+            embed = discord.Embed(title="🔁 Cogs Reload Summary", color=discord.Color.blurple())
             embed.add_field(name="Reloaded", value=", ".join(reloaded) or "None", inline=False)
             embed.add_field(name="Loaded", value=", ".join(loaded) or "None", inline=False)
+            if failed:
+                embed.add_field(name="Errors", value="\n".join(failed), inline=False)
+
             await interaction.followup.send(embed=embed, ephemeral=True)
             return
 
+        # Targeted reload
         matches = [c for c in available if c.lower() == target]
         if matches:
             cog = matches[0]
@@ -48,8 +56,13 @@ class ReloadCog(commands.Cog):
                 await self.bot.reload_extension(full_path)
                 status = "🔄 Reloaded"
             except commands.ExtensionNotLoaded:
-                await self.bot.load_extension(full_path)
-                status = "✅ Loaded"
+                try:
+                    await self.bot.load_extension(full_path)
+                    status = "✅ Loaded"
+                except Exception as e:
+                    await interaction.followup.send(f"❌ Failed to load `{cog}`: {type(e).__name__}", ephemeral=True)
+                    print(f"[Reload] ❌ {type(e).__name__}: {e}")
+                    return
 
             embed = discord.Embed(
                 title=f"{status} `{cog}`",

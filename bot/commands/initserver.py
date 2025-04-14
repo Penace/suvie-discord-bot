@@ -12,48 +12,57 @@ REQUIRED_CHANNELS = [
 ]
 
 class InitServerCog(commands.Cog):
-    def __init__(self, bot):
+    def __init__(self, bot: commands.Bot):
         self.bot = bot
 
-    @app_commands.command(name="initserver", description="Set up all required suvie channels.")
+    @app_commands.command(name="initserver", description="Set up all required Suvie channels.")
     @app_commands.checks.has_permissions(administrator=True)
     async def initserver(self, interaction: discord.Interaction):
         await interaction.response.defer(ephemeral=True)
-        print("👀 Starting /initserver command")
-
+        print("👀 Running /initserver")
 
         guild = interaction.guild
         if not guild:
-            await interaction.followup.send("❌ This command can only be used in a server.", ephemeral=True)
+            await interaction.followup.send("❌ This command must be used in a server.", ephemeral=True)
             return
 
-        # Create or get the 🎬 suvie category
+        # Get or create category
         category = discord.utils.get(guild.categories, name="🎬 suvie")
         if not category:
             category = await guild.create_category("🎬 suvie")
-            print(f"📁 Using category: {category.name}")
+            print(f"📁 Created category: {category.name}")
 
-        created = []
+        created: list[str] = []
+        existing: list[str] = []
+
         for name in REQUIRED_CHANNELS:
-            try:
-                if not discord.utils.get(guild.text_channels, name=name):
+            channel = discord.utils.get(guild.text_channels, name=name)
+            if not channel:
+                try:
                     await guild.create_text_channel(name, category=category)
-                    created.append(f"📁 #{name}")
-                    print(f"✅ Created or verified #{name}")
-            except Exception as e:
-                print(f"❌ Failed to create #{name}: {e}")
+                    created.append(name)
+                    print(f"✅ Created: #{name}")
+                except Exception as e:
+                    print(f"❌ Failed to create #{name}: {e}")
+            else:
+                existing.append(name)
+                print(f"✔️ Already exists: #{name}")
 
         # Summary Embed
         embed = discord.Embed(
-            title="✅ suvie Setup Complete",
-            description="Your server is ready to go! Here are the channels I created or verified:",
+            title="✅ Suvie Setup Complete",
+            description="All required channels are now ready.",
             color=discord.Color.green()
         )
-        for name in REQUIRED_CHANNELS:
-            embed.add_field(name=f"#{name}", value="Ready ✅", inline=True)
+        if created:
+            embed.add_field(name="📁 Created Channels", value="\n".join(f"#{c}" for c in created), inline=False)
+        if existing:
+            embed.add_field(name="📂 Already Exists", value="\n".join(f"#{c}" for c in existing), inline=False)
 
-        await interaction.followup.send("✅ Suvie setup command reached this point.", ephemeral=True)
+        embed.set_footer(text="Run this again if you accidentally delete channels.")
+        await interaction.followup.send(embed=embed, ephemeral=True)
+
 # === Cog Loader ===
 async def setup(bot: commands.Bot):
     await bot.add_cog(InitServerCog(bot))
-    print("🚀 InitServer command loaded.")
+    print("🚀 Loaded cog: initserver")

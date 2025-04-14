@@ -9,14 +9,14 @@ from typing import Optional, cast
 # === Load .env ===
 load_dotenv()
 
-# === API KEYS ===
-OPENAI_KEY: Optional[str] = os.getenv("OPENAI_API_KEY")
+# === API Keys ===
 DISCORD_TOKEN: Optional[str] = os.getenv("DISCORD_TOKEN")
+OPENAI_KEY: Optional[str] = os.getenv("OPENAI_API_KEY")
 
 if not DISCORD_TOKEN:
-    raise EnvironmentError("DISCORD_TOKEN is not set in the .env file.")
+    raise EnvironmentError("DISCORD_TOKEN not set in .env file")
 if not OPENAI_KEY:
-    raise EnvironmentError("OPENAI_API_KEY is not set in the .env file.")
+    raise EnvironmentError("OPENAI_API_KEY not set in .env file")
 
 # === OpenAI Init ===
 client = OpenAI(api_key=OPENAI_KEY)
@@ -31,7 +31,7 @@ intents.members = True
 bot: commands.Bot = commands.Bot(command_prefix="!", intents=intents)
 bot.remove_command("help")
 
-# === Ready Event ===
+# === on_ready Event ===
 @bot.event
 async def on_ready():
     if bot.user:
@@ -44,21 +44,20 @@ async def on_ready():
     except Exception as e:
         print(f"❌ Failed to sync commands: {type(e).__name__}: {e}")
 
-# === Load Cogs Safely ===
+# === Load Cogs ===
 async def load_cogs():
-    base_dir = os.path.dirname(os.path.abspath(__file__))
-    command_dir = os.path.join(base_dir, "commands")
+    command_dir = os.path.join(os.path.dirname(__file__), "commands")
     print(f"📂 Loading cogs from: {command_dir}")
 
     for filename in os.listdir(command_dir):
-        if filename.endswith(".py"):
+        if filename.endswith(".py") and not filename.startswith("__"):
             module_name = filename[:-3]
             try:
                 await bot.load_extension(f"commands.{module_name}")
             except Exception as e:
                 print(f"⚠️ Failed to load {module_name}: {type(e).__name__}: {e}")
 
-# === Main Runner ===
+# === Main Entrypoint ===
 async def main():
     await load_cogs()
     await bot.start(cast(str, DISCORD_TOKEN))
@@ -69,6 +68,6 @@ if __name__ == "__main__":
             asyncio.set_event_loop_policy(asyncio.WindowsSelectorEventLoopPolicy())
         asyncio.run(main())
     except KeyboardInterrupt:
-        print("🛑 Shutting down...")
+        print("🛑 Shutdown requested. Exiting...")
     except Exception as e:
-        print(f"❌ Unexpected error: {type(e).__name__}: {e}")
+        print(f"❌ Fatal error: {type(e).__name__}: {e}")

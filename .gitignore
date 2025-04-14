@@ -14,11 +14,12 @@ backups/
 *.zip
 movies.json
 movies_*.json
+*.json
+!bot/utils/*.json
 
 # Python
 *.pyc
 __pycache__/
-suvie-env/
 
 # Node
 node_modules/
