@@ -27,6 +27,10 @@ class WatchlistGroup(commands.GroupCog, name="watchlist"):
         self.bot = bot
 
     @app_commands.command(name="add", description="Add a movie or show to your watchlist.")
+    async def add(self, interaction: discord.Interaction, title: str):
+        await interaction.response.defer(ephemeral=True)
+        print("✅ /watchlist add triggered with title:", title)
+        await interaction.followup.send(f"Title received: **{title}**", ephemeral=True)
     # async def add(
     #     self,
     #     interaction: discord.Interaction,
@@ -99,11 +103,6 @@ class WatchlistGroup(commands.GroupCog, name="watchlist"):
 
     #     await interaction.followup.send(embed=embed, ephemeral=True)
 
-    @app_commands.command(name="add", description="Add a movie or show to your watchlist.")
-    async def add(self, interaction: discord.Interaction, title: str):
-        await interaction.response.defer(ephemeral=True)
-        print("✅ /watchlist add triggered with title:", title)
-        await interaction.followup.send(f"Title received: **{title}**", ephemeral=True)
     @app_commands.command(name="remove", description="Remove a movie or show from your watchlist.")
     async def remove(self, interaction: discord.Interaction, title: str):
         await interaction.response.defer(ephemeral=True)
