@@ -60,7 +60,6 @@ async def load_cogs():
             module_name = filename[:-3]
             try:
                 await bot.load_extension(f"bot.commands.{module_name}")
-                print(f"📁 Loaded cog: {module_name}")
             except Exception as e:
                 print(f"⚠️ Failed to load {module_name}: {type(e).__name__}: {e}")
 

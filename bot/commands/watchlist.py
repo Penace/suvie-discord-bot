@@ -33,12 +33,39 @@ class WatchlistGroup(commands.GroupCog, name="watchlist"):
 
         try:
             from bot.utils.imdb import fetch_movie_data
+            from bot.models.movie import Movie
+            from bot.utils.database import engine
+            from sqlalchemy.orm import Session
+
             movie_data = fetch_movie_data(title=title)
             print("📦 OMDb response:", movie_data)
-            await interaction.followup.send(f"✅ Fetched movie: **{movie_data['title']}**", ephemeral=True)
+
+            new_movie = Movie(
+                guild_id=interaction.guild_id or 0,
+                title=movie_data["title"],
+                year=movie_data.get("year"),
+                genre=movie_data.get("genre"),
+                plot=movie_data.get("plot"),
+                poster=movie_data.get("poster"),
+                imdb_url=movie_data.get("imdb_url"),
+                imdb_id=movie_data.get("imdb_id"),
+                imdb_rating=movie_data.get("imdb_rating"),
+                director=movie_data.get("director"),
+                actors=movie_data.get("actors"),
+                type=movie_data.get("type", "movie"),
+                status="watchlist"
+            )
+
+            with Session(engine) as session:
+                session.add(new_movie)
+                session.commit()
+                print("💾 Saved movie to database.")
+
+            await interaction.followup.send(f"✅ **{new_movie.title}** added to your watchlist.", ephemeral=True)
+
         except Exception as e:
-            print(f"❌ Error fetching OMDb: {e}")
-            await interaction.followup.send(f"❌ Error: {e}", ephemeral=True)
+            print(f"❌ Error: {e}")
+            await interaction.followup.send(f"❌ DB Error: {e}", ephemeral=True)
     # async def add(
     #     self,
     #     interaction: discord.Interaction,
