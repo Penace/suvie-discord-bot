@@ -16,10 +16,10 @@ class WatchedCog(commands.Cog):
     @app_commands.command(name="watched", description="Mark a movie or TV show as watched (from any list).")
     @app_commands.describe(
         title="The title of the movie or show you've finished watching.",
-        timestamp="Optional: Timestamp (e.g. 01:23:45 or auto-generated)",
-        season="Optional: Season number (for series)",
-        episode="Optional: Episode number (for series)",
-        filepath="Optional: File path or location"
+        timestamp="Optional: Timestamp when you stopped watching (e.g. 01:23:45 or auto-generated)",
+        season="Optional: Season number (TV series only)",
+        episode="Optional: Episode number (TV series only)",
+        filepath="Optional: File path or location of the file"
     )
     async def watched(
         self,
@@ -31,13 +31,9 @@ class WatchedCog(commands.Cog):
         filepath: Optional[str] = None
     ):
         await interaction.response.defer(ephemeral=True)
-        print(f"🎞️ /watched triggered: {title}")
+        print(f"🎞️ /watched: {title}")
 
         guild_id = interaction.guild_id
-        if guild_id is None:
-            await interaction.followup.send("❌ This command must be used in a server.", ephemeral=True)
-            return
-
         try:
             with Session(engine) as session:
                 movie = session.query(Movie).filter(
@@ -49,53 +45,53 @@ class WatchedCog(commands.Cog):
                     await interaction.followup.send("❌ Movie not found in your library.", ephemeral=True)
                     return
 
-                # === Update fields ===
+                # === Update movie ===
                 movie.status = "watched"
                 now = datetime.now()
-
-                # Apply episode/season only if series
+                movie.timestamp = timestamp or now.strftime("%H:%M:%S %d/%m/%Y")
+                if filepath:
+                    movie.filepath = filepath
                 if movie.type == "series":
                     if season:
                         movie.season = season
                     if episode:
                         movie.episode = episode
 
-                # Timestamp (custom or now)
-                movie.timestamp = timestamp or now.strftime("%H:%M:%S %d/%m/%Y")
-
-                if filepath:
-                    movie.filepath = filepath
+                # ✅ Cache values BEFORE closing session
+                title_display = f"{movie.title} (S{int(movie.season):02}E{int(movie.episode):02})" if movie.type == "series" else movie.title
+                watched_at = movie.timestamp
+                year = movie.year
+                genre = movie.genre
+                file_path = movie.filepath
+                imdb = movie.imdb_url
+                poster = movie.poster
 
                 session.commit()
-                print(f"✅ Marked as watched: {movie.title} ({movie.status})")
+                print("✅ Movie marked as watched.")
 
-            # === Display title for series ===
-            suffix = f" (S{movie.season:02}E{movie.episode:02})" if movie.type == "series" and movie.season and movie.episode else ""
+            # === Embed ===
             embed = discord.Embed(
-                title=f"✅ Archived: {movie.title}{suffix}",
+                title=f"✅ Archived: {title_display}",
                 color=discord.Color.from_rgb(255, 105, 180)
             )
-            embed.add_field(name="Watched At", value=movie.timestamp, inline=True)
-            if movie.year:
-                embed.add_field(name="Year", value=movie.year, inline=True)
-            if movie.genre:
-                embed.add_field(name="Genre", value=movie.genre, inline=True)
-            if movie.filepath:
-                embed.add_field(name="File Path", value=movie.filepath, inline=False)
-            if movie.imdb_url:
-                embed.add_field(name="IMDb", value=movie.imdb_url, inline=False)
-            if movie.poster and movie.poster != "N/A":
-                embed.set_thumbnail(url=movie.poster)
+            embed.add_field(name="Watched At", value=watched_at, inline=True)
+            if year:
+                embed.add_field(name="Year", value=year, inline=True)
+            if genre:
+                embed.add_field(name="Genre", value=genre, inline=True)
+            if file_path:
+                embed.add_field(name="File Path", value=file_path, inline=False)
+            if imdb:
+                embed.add_field(name="IMDb", value=imdb, inline=False)
+            if poster and poster != "N/A":
+                embed.set_thumbnail(url=poster)
 
             await update_watched_channel(self.bot, guild_id)
             await interaction.followup.send(embed=embed, ephemeral=True)
 
         except Exception as e:
-            import traceback
-            error_trace = traceback.format_exc()
             print(f"❌ Error in /watched: {type(e).__name__}: {e}")
-            print(error_trace)
-            await interaction.followup.send(f"❌ Failed to mark as watched.\nError: {type(e).__name__}: {e}", ephemeral=True)
+            await interaction.followup.send("❌ Failed to mark as watched.", ephemeral=True)
 
 # === Cog Loader ===
 async def setup(bot: commands.Bot):
