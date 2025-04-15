@@ -15,7 +15,7 @@ BACKUP_DIR = Path("backups/json")
 
 def load_movies(guild_id: int) -> List[Movie]:
     with Session(engine) as session:
-        return session.scalars(select(Movie).where(Movie.guild_id == str(guild_id))).all()
+        return session.scalars(select(Movie).where(Movie.guild_id == guild_id)).all()
 
 def save_movie(movie: Movie):
     with Session(engine) as session:
