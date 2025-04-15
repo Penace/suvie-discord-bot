@@ -34,9 +34,6 @@ class WatchedCog(commands.Cog):
         print(f"🎞️ /watched: {title}")
 
         guild_id = interaction.guild_id
-        if guild_id is None:
-            await interaction.followup.send("❌ This command must be run in a server.", ephemeral=True)
-            return
 
         try:
             with Session(engine) as session:
