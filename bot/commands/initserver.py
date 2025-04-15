@@ -11,6 +11,8 @@ REQUIRED_CHANNELS = [
     "suvie-ai"
 ]
 
+CATEGORY_NAME = "🎬 suvie"
+
 class InitServerCog(commands.Cog):
     def __init__(self, bot: commands.Bot):
         self.bot = bot
@@ -23,51 +25,56 @@ class InitServerCog(commands.Cog):
 
         guild = interaction.guild
         if not guild:
-            await interaction.followup.send("❌ This command must be used in a server.", ephemeral=True)
+            await interaction.followup.send("❌ This command must be run in a server.", ephemeral=True)
             return
 
         try:
-            # Find or create "🎬 suvie" category
-            category = discord.utils.get(guild.categories, name="🎬 suvie")
+            # Get or create the "🎬 suvie" category
+            category = discord.utils.get(guild.categories, name=CATEGORY_NAME)
             if not category:
-                category = await guild.create_category("🎬 suvie")
+                category = await guild.create_category(CATEGORY_NAME)
                 print(f"📁 Created category: {category.name}")
 
             created = []
             existing = []
 
-            for name in REQUIRED_CHANNELS:
-                # Check if channel exists under the correct category
-                existing_channel = discord.utils.get(guild.text_channels, name=name, category=category)
-                if not existing_channel:
-                    try:
-                        await guild.create_text_channel(name, category=category)
-                        created.append(name)
-                        print(f"✅ Created channel: #{name}")
-                    except discord.Forbidden:
-                        print(f"🚫 Missing permissions to create channel: #{name}")
-                    except Exception as e:
-                        print(f"❌ Failed to create channel #{name}: {e}")
+            for channel_name in REQUIRED_CHANNELS:
+                existing_channel = discord.utils.get(guild.text_channels, name=channel_name)
+                
+                if existing_channel:
+                    # Move channel to correct category if it's not already in it
+                    if existing_channel.category_id != category.id:
+                        try:
+                            await existing_channel.edit(category=category)
+                            print(f"📦 Moved #{channel_name} to '{CATEGORY_NAME}'")
+                        except discord.Forbidden:
+                            print(f"🚫 Permission denied to move #{channel_name}")
+                    existing.append(channel_name)
                 else:
-                    existing.append(name)
-                    print(f"✔️ Channel already exists: #{name}")
+                    try:
+                        await guild.create_text_channel(channel_name, category=category)
+                        created.append(channel_name)
+                        print(f"✅ Created #{channel_name}")
+                    except discord.Forbidden:
+                        print(f"🚫 Missing permissions to create #{channel_name}")
+                    except Exception as e:
+                        print(f"❌ Failed to create #{channel_name}: {e}")
 
-            # === Summary Embed ===
             embed = discord.Embed(
                 title="✅ Suvie Setup Complete",
-                description="Required channels have been created or confirmed.",
+                description="All required channels are ready.",
                 color=discord.Color.green()
             )
             if created:
-                embed.add_field(name="📁 Created", value="\n".join(sorted(f"#{c}" for c in created)), inline=False)
+                embed.add_field(name="📁 Created Channels", value="\n".join(f"#{c}" for c in created), inline=False)
             if existing:
-                embed.add_field(name="📂 Already Exists", value="\n".join(sorted(f"#{c}" for c in existing)), inline=False)
+                embed.add_field(name="📂 Already Existing", value="\n".join(f"#{c}" for c in existing), inline=False)
+            embed.set_footer(text="You can rerun this command if channels are deleted or moved.")
 
-            embed.set_footer(text="Run this command again if channels are ever deleted.")
             await interaction.followup.send(embed=embed, ephemeral=True)
 
         except Exception as e:
-            print(f"❌ Error during /initserver: {e}")
+            print(f"❌ Error during /initserver: {type(e).__name__}: {e}")
             await interaction.followup.send("❌ Something went wrong during initialization.", ephemeral=True)
 
 # === Cog Loader ===

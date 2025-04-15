@@ -16,10 +16,10 @@ class WatchedCog(commands.Cog):
     @app_commands.command(name="watched", description="Mark a movie or TV show as watched (from any list).")
     @app_commands.describe(
         title="The title of the movie or show you've finished watching.",
-        timestamp="Optional: Timestamp when you stopped watching (e.g. 01:23:45 or auto-generated)",
-        season="Optional: Season number (TV series only)",
-        episode="Optional: Episode number (TV series only)",
-        filepath="Optional: File path or location of the file"
+        timestamp="Optional: Timestamp (e.g. 01:23:45 or auto-generated)",
+        season="Optional: Season number (for series)",
+        episode="Optional: Episode number (for series)",
+        filepath="Optional: File path or location"
     )
     async def watched(
         self,
@@ -31,11 +31,11 @@ class WatchedCog(commands.Cog):
         filepath: Optional[str] = None
     ):
         await interaction.response.defer(ephemeral=True)
-        print(f"🎞️ /watched triggered with title: {title}")
+        print(f"🎞️ /watched triggered: {title}")
 
         guild_id = interaction.guild_id
-        if not isinstance(guild_id, int):
-            await interaction.followup.send("❌ This command must be run in a server.", ephemeral=True)
+        if guild_id is None:
+            await interaction.followup.send("❌ This command must be used in a server.", ephemeral=True)
             return
 
         try:
@@ -49,22 +49,28 @@ class WatchedCog(commands.Cog):
                     await interaction.followup.send("❌ Movie not found in your library.", ephemeral=True)
                     return
 
+                # === Update fields ===
                 movie.status = "watched"
+                now = datetime.now()
+
+                # Apply episode/season only if series
                 if movie.type == "series":
                     if season:
                         movie.season = season
                     if episode:
                         movie.episode = episode
+
+                # Timestamp (custom or now)
+                movie.timestamp = timestamp or now.strftime("%H:%M:%S %d/%m/%Y")
+
                 if filepath:
                     movie.filepath = filepath
 
-                now = datetime.now()
-                movie.timestamp = timestamp or now.strftime("%H:%M:%S %d/%m/%Y")
                 session.commit()
-                print("✅ Movie updated to 'watched'.")
+                print(f"✅ Marked as watched: {movie.title} ({movie.status})")
 
-            # === Format embed ===
-            suffix = f" (S{int(movie.season or 1):02}E{int(movie.episode or 1):02})" if movie.type == "series" else ""
+            # === Display title for series ===
+            suffix = f" (S{movie.season:02}E{movie.episode:02})" if movie.type == "series" and movie.season and movie.episode else ""
             embed = discord.Embed(
                 title=f"✅ Archived: {movie.title}{suffix}",
                 color=discord.Color.from_rgb(255, 105, 180)
@@ -81,16 +87,15 @@ class WatchedCog(commands.Cog):
             if movie.poster and movie.poster != "N/A":
                 embed.set_thumbnail(url=movie.poster)
 
-            try:
-                await update_watched_channel(self.bot, guild_id)
-            except Exception as e:
-                print(f"⚠️ Channel update error: {type(e).__name__}: {e}")
-
+            await update_watched_channel(self.bot, guild_id)
             await interaction.followup.send(embed=embed, ephemeral=True)
 
         except Exception as e:
-            print(f"❌ /watched failed: {type(e).__name__}: {e}")
-            await interaction.followup.send("❌ Failed to mark as watched.", ephemeral=True)
+            import traceback
+            error_trace = traceback.format_exc()
+            print(f"❌ Error in /watched: {type(e).__name__}: {e}")
+            print(error_trace)
+            await interaction.followup.send(f"❌ Failed to mark as watched.\nError: {type(e).__name__}: {e}", ephemeral=True)
 
 # === Cog Loader ===
 async def setup(bot: commands.Bot):
