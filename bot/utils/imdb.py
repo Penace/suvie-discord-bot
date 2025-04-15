@@ -2,7 +2,7 @@ import sys
 import os
 sys.path.append(os.path.dirname(os.path.abspath(__file__)))
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
-import os
+
 import requests
 from typing import Optional, Dict
 from dotenv import load_dotenv
@@ -68,7 +68,7 @@ def fetch_movie_model(
     data = fetch_movie_data(imdb_id=imdb_id, title=title)
 
     return Movie(
-        guild_id=str(guild_id or 0),
+        guild_id=guild_id or 0,
         title=data.get("title"),
         year=data.get("year"),
         genre=data.get("genre"),

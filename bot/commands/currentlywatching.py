@@ -31,12 +31,15 @@ class CurrentlyWatchingCog(commands.GroupCog, name="currentlywatching"):
         filepath: Optional[str] = None
     ):
         await interaction.response.defer(ephemeral=True)
-        print(f"🎬 /currentlywatching set: {title}")
+        print(f"✨ /currentlywatching set: {title}")
+
+        guild_id = interaction.guild_id
+        if guild_id is None:
+            await interaction.followup.send("❌ This command must be used in a server.", ephemeral=True)
+            return
 
         try:
-            guild_id = str(interaction.guild_id or 0)
             movie = get_movie_by_title(guild_id, title)
-
             if not movie:
                 await interaction.followup.send("❌ Title not found in your library.", ephemeral=True)
                 return
@@ -54,9 +57,8 @@ class CurrentlyWatchingCog(commands.GroupCog, name="currentlywatching"):
             with Session(engine) as session:
                 session.merge(movie)
                 session.commit()
-                print("✅ Status set to currently-watching.")
 
-            await update_currently_watching_channel(self.bot, interaction.guild_id)
+            await update_currently_watching_channel(self.bot, guild_id)
 
             suffix = f" (S{int(movie.season):02}E{int(movie.episode):02})" if movie.type == "series" else ""
             await interaction.followup.send(f"🎬 Set **{movie.title}{suffix}** as currently watching.", ephemeral=True)
@@ -78,10 +80,13 @@ class CurrentlyWatchingCog(commands.GroupCog, name="currentlywatching"):
         await interaction.response.defer(ephemeral=True)
         print(f"🛠️ /currentlywatching update: {title}")
 
-        try:
-            guild_id = str(interaction.guild_id or 0)
-            movie = get_movie_by_title(guild_id, title)
+        guild_id = interaction.guild_id
+        if guild_id is None:
+            await interaction.followup.send("❌ This command must be used in a server.", ephemeral=True)
+            return
 
+        try:
+            movie = get_movie_by_title(guild_id, title)
             if not movie:
                 await interaction.followup.send("❌ Entry not found in your library.", ephemeral=True)
                 return
@@ -101,9 +106,8 @@ class CurrentlyWatchingCog(commands.GroupCog, name="currentlywatching"):
             with Session(engine) as session:
                 session.merge(movie)
                 session.commit()
-                print("🔁 Movie updated.")
 
-            await update_currently_watching_channel(self.bot, interaction.guild_id)
+            await update_currently_watching_channel(self.bot, guild_id)
 
             suffix = f" (S{int(movie.season):02}E{int(movie.episode):02})" if movie.type == "series" else ""
             await interaction.followup.send(f"🔁 Updated **{movie.title}{suffix}**.", ephemeral=True)
@@ -117,10 +121,13 @@ class CurrentlyWatchingCog(commands.GroupCog, name="currentlywatching"):
         await interaction.response.defer(ephemeral=True)
         print(f"🗑️ /currentlywatching remove: {title}")
 
-        try:
-            guild_id = str(interaction.guild_id or 0)
-            movie = get_movie_by_title(guild_id, title)
+        guild_id = interaction.guild_id
+        if guild_id is None:
+            await interaction.followup.send("❌ This command must be used in a server.", ephemeral=True)
+            return
 
+        try:
+            movie = get_movie_by_title(guild_id, title)
             if not movie or movie.status != "currently-watching":
                 await interaction.followup.send("❌ Title not found in your currently watching list.", ephemeral=True)
                 return
@@ -130,9 +137,8 @@ class CurrentlyWatchingCog(commands.GroupCog, name="currentlywatching"):
             with Session(engine) as session:
                 session.merge(movie)
                 session.commit()
-                print("🗑️ Movie status reverted to watchlist.")
 
-            await update_currently_watching_channel(self.bot, interaction.guild_id)
+            await update_currently_watching_channel(self.bot, guild_id)
             await interaction.followup.send(f"🗑️ Removed **{movie.title}** from currently watching.", ephemeral=True)
 
         except Exception as e:
@@ -144,10 +150,13 @@ class CurrentlyWatchingCog(commands.GroupCog, name="currentlywatching"):
         await interaction.response.defer(ephemeral=True)
         print("👀 /currentlywatching view triggered")
 
-        try:
-            guild_id = str(interaction.guild_id or 0)
-            currently_watching = get_currently_watching_movies(guild_id)
+        guild_id = interaction.guild_id
+        if guild_id is None:
+            await interaction.followup.send("❌ This command must be used in a server.", ephemeral=True)
+            return
 
+        try:
+            currently_watching = get_currently_watching_movies(guild_id)
             if not currently_watching:
                 await interaction.followup.send("📭 You're not currently watching anything.", ephemeral=True)
                 return
@@ -165,10 +174,13 @@ class CurrentlyWatchingCog(commands.GroupCog, name="currentlywatching"):
         await interaction.response.defer(ephemeral=True)
         print(f"⏭️ /currentlywatching next: {title}")
 
-        try:
-            guild_id = str(interaction.guild_id or 0)
-            movie = get_movie_by_title(guild_id, title)
+        guild_id = interaction.guild_id
+        if guild_id is None:
+            await interaction.followup.send("❌ This command must be used in a server.", ephemeral=True)
+            return
 
+        try:
+            movie = get_movie_by_title(guild_id, title)
             if not movie:
                 await interaction.followup.send("❌ Show not found.", ephemeral=True)
                 return
@@ -183,9 +195,8 @@ class CurrentlyWatchingCog(commands.GroupCog, name="currentlywatching"):
             with Session(engine) as session:
                 session.merge(movie)
                 session.commit()
-                print("⏭️ Advanced to next episode.")
 
-            await update_currently_watching_channel(self.bot, interaction.guild_id)
+            await update_currently_watching_channel(self.bot, guild_id)
             await interaction.followup.send(f"⏭️ Now watching **{movie.title} S{int(movie.season):02}E{int(movie.episode):02}**", ephemeral=True)
 
         except Exception as e:

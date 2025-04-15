@@ -5,7 +5,7 @@ from discord.ext import commands
 from discord import app_commands
 from typing import Optional
 from sqlalchemy.orm import Session
-from sqlalchemy import select, func
+from sqlalchemy import select
 
 # === Fix import path for local + prod ===
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "..")))
@@ -15,6 +15,7 @@ print(f"🔍 PYTHONPATH: {sys.path[-1]}")
 from bot.models.movie import Movie
 from bot.utils.database import engine
 from bot.utils.storage import (
+    get_movie_by_title,
     get_movies_by_status,
     update_watchlist_channel,
     create_embed
@@ -30,23 +31,14 @@ class WatchlistGroup(commands.GroupCog, name="watchlist"):
         await interaction.response.defer(ephemeral=True)
         print("✅ /watchlist add triggered with title:", title)
 
-        guild_id = str(interaction.guild_id or 0)
+        guild_id = interaction.guild_id
+
+        if get_movie_by_title(guild_id, title):
+            await interaction.followup.send("❌ This title is already in your watchlist.", ephemeral=True)
+            return
 
         try:
-            with Session(engine) as session:
-                # Check for duplicates using case-insensitive matching
-                duplicate = session.scalar(
-                    select(Movie).where(
-                        func.lower(Movie.guild_id) == func.lower(guild_id),
-                        func.lower(Movie.title) == func.lower(title),
-                        Movie.status == "watchlist"
-                    )
-                )
-                if duplicate:
-                    await interaction.followup.send("❌ This title is already in your watchlist.", ephemeral=True)
-                    return
-
-            movie_data = fetch_movie_data(title=title)
+            movie_data = fetch_movie_data(title=title.strip())
             print("📦 OMDb response:", movie_data)
 
             new_movie = Movie(
@@ -68,9 +60,10 @@ class WatchlistGroup(commands.GroupCog, name="watchlist"):
             with Session(engine) as session:
                 session.add(new_movie)
                 session.commit()
-                print("💾 Movie saved to DB:", new_movie.title)
+                print("📂 Saved movie to database:", new_movie.title)
 
-            await update_watchlist_channel(self.bot, str(interaction.guild_id))
+            await update_watchlist_channel(self.bot, guild_id)
+
             embed = create_embed(new_movie, title_prefix="🎬 Added to Watchlist: ", color=discord.Color.teal())
             await interaction.followup.send(embed=embed, ephemeral=True)
 
@@ -81,19 +74,17 @@ class WatchlistGroup(commands.GroupCog, name="watchlist"):
     @app_commands.command(name="remove", description="Remove a movie or show from your watchlist.")
     async def remove(self, interaction: discord.Interaction, title: str):
         await interaction.response.defer(ephemeral=True)
-        print("🗑️ /watchlist remove triggered with title:", title)
+        print("🖑️ /watchlist remove triggered with title:", title)
 
         try:
-            guild_id = str(interaction.guild_id or 0)
+            guild_id = interaction.guild_id
 
             with Session(engine) as session:
-                # Case-insensitive fuzzy match (trimming + lower)
-                stmt = select(Movie).where(
-                    func.lower(Movie.guild_id) == func.lower(guild_id),
-                    func.lower(Movie.title).like(f"%{title.lower()}%"),
+                movie = session.query(Movie).filter(
+                    Movie.guild_id == guild_id,
+                    Movie.title.ilike(title),
                     Movie.status == "watchlist"
-                )
-                movie = session.scalar(stmt)
+                ).first()
 
                 if not movie:
                     await interaction.followup.send("❌ Title not found in your watchlist.", ephemeral=True)
@@ -101,10 +92,10 @@ class WatchlistGroup(commands.GroupCog, name="watchlist"):
 
                 session.delete(movie)
                 session.commit()
-                print(f"🗑️ Removed: {movie.title}")
+                print(f"🖑️ Deleted '{title}' from watchlist")
 
-            await update_watchlist_channel(self.bot, str(interaction.guild_id))
-            await interaction.followup.send(f"🗑️ Removed **{movie.title}** from your watchlist.", ephemeral=True)
+            await update_watchlist_channel(self.bot, guild_id)
+            await interaction.followup.send(f"🗑️ Removed **{title}** from your watchlist.", ephemeral=True)
 
         except Exception as e:
             print(f"❌ Error in /remove: {e}")
@@ -116,7 +107,7 @@ class WatchlistGroup(commands.GroupCog, name="watchlist"):
         print("👀 /watchlist view triggered")
 
         try:
-            guild_id = str(interaction.guild_id or 0)
+            guild_id = interaction.guild_id
             watchlist = get_movies_by_status(guild_id, "watchlist")
 
             if not watchlist:
@@ -134,17 +125,17 @@ class WatchlistGroup(commands.GroupCog, name="watchlist"):
     @app_commands.command(name="clear", description="Clear your watchlist completely.")
     async def clear(self, interaction: discord.Interaction):
         await interaction.response.defer(ephemeral=True)
-        print("🧹 /watchlist clear triggered")
+        print("🪟 /watchlist clear triggered")
 
         try:
-            guild_id = str(interaction.guild_id or 0)
+            guild_id = interaction.guild_id
 
             with Session(engine) as session:
                 count = session.query(Movie).filter_by(guild_id=guild_id, status="watchlist").delete()
                 session.commit()
-                print(f"🧹 Cleared {count} entries")
+                print(f"🪟 Cleared {count} watchlist entries")
 
-            await update_watchlist_channel(self.bot, str(interaction.guild_id))
+            await update_watchlist_channel(self.bot, guild_id)
 
             if count:
                 await interaction.followup.send("✅ Watchlist cleared.", ephemeral=True)

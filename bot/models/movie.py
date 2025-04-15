@@ -1,11 +1,11 @@
-from sqlalchemy import Column, Integer, String, Text
+from sqlalchemy import Column, Integer, String, Text, BigInteger
 from bot.utils.database import Base
 
 class Movie(Base):
     __tablename__ = "movies"
     
     id = Column(Integer, primary_key=True, index=True)
-    guild_id = Column(String, index=True)
+    guild_id = Column(BigInteger, index=True)
     title = Column(String, index=True)
     year = Column(String, nullable=True)
     genre = Column(String, nullable=True)

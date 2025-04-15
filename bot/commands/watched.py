@@ -34,36 +34,41 @@ class WatchedCog(commands.Cog):
             await interaction.followup.send("❌ This command must be run in a server.", ephemeral=True)
             return
 
-        with Session(engine) as session:
-            movie = session.query(Movie).filter_by(guild_id=guild_id, title=title).first()
-            if not movie:
-                await interaction.followup.send("❌ Movie not found in your library.", ephemeral=True)
-                return
+        try:
+            with Session(engine) as session:
+                movie = session.query(Movie).filter_by(guild_id=guild_id, title=title).first()
+                if not movie:
+                    await interaction.followup.send("❌ Movie not found in your library.", ephemeral=True)
+                    return
 
-            movie.status = "watched"
-            movie.timestamp = timestamp or datetime.now().strftime("%H:%M:%S")
-            if filepath:
-                movie.filepath = filepath
-            session.commit()
+                movie.status = "watched"
+                movie.timestamp = timestamp or datetime.now().strftime("%H:%M:%S")
+                if filepath:
+                    movie.filepath = filepath
+                session.commit()
 
-            embed = discord.Embed(
-                title=f"✅ Marked as Watched: {movie.title}",
-                color=discord.Color.from_rgb(255, 105, 180)
-            )
-            embed.add_field(name="Watched At", value=movie.timestamp, inline=True)
-            if movie.year:
-                embed.add_field(name="Year", value=movie.year, inline=True)
-            if movie.genre:
-                embed.add_field(name="Genre", value=movie.genre, inline=True)
-            if movie.filepath:
-                embed.add_field(name="File Path", value=movie.filepath, inline=False)
-            if movie.imdb_url:
-                embed.add_field(name="IMDb", value=movie.imdb_url, inline=False)
-            if movie.poster and movie.poster != "N/A":
-                embed.set_thumbnail(url=movie.poster)
+                embed = discord.Embed(
+                    title=f"✅ Marked as Watched: {movie.title}",
+                    color=discord.Color.from_rgb(255, 105, 180)
+                )
+                embed.add_field(name="Watched At", value=movie.timestamp, inline=True)
+                if movie.year:
+                    embed.add_field(name="Year", value=movie.year, inline=True)
+                if movie.genre:
+                    embed.add_field(name="Genre", value=movie.genre, inline=True)
+                if movie.filepath:
+                    embed.add_field(name="File Path", value=movie.filepath, inline=False)
+                if movie.imdb_url:
+                    embed.add_field(name="IMDb", value=movie.imdb_url, inline=False)
+                if movie.poster and movie.poster != "N/A":
+                    embed.set_thumbnail(url=movie.poster)
 
-        await update_watched_channel(self.bot, guild_id)
-        await interaction.followup.send(embed=embed, ephemeral=True)
+            await update_watched_channel(self.bot, guild_id)
+            await interaction.followup.send(embed=embed, ephemeral=True)
+
+        except Exception as e:
+            print(f"❌ Error in /watched: {e}")
+            await interaction.followup.send("❌ Failed to mark as watched.", ephemeral=True)
 
 # === Cog Loader ===
 async def setup(bot: commands.Bot):
