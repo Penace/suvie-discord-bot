@@ -13,17 +13,16 @@ BACKUP_DIR = Path("backups/json")
 
 # === Load & Save ===
 
-def load_movies(guild_id: int) -> List[Movie]:
+def load_movies(guild_id: str) -> List[Movie]:
     with Session(engine) as session:
-        result = session.scalars(select(Movie).where(Movie.guild_id == guild_id)).all()
-        return result
+        return session.scalars(select(Movie).where(Movie.guild_id == guild_id)).all()
 
 def save_movie(movie: Movie):
     with Session(engine) as session:
         session.add(movie)
         session.commit()
 
-def delete_movie(guild_id: int, title: str) -> bool:
+def delete_movie(guild_id: str, title: str) -> bool:
     with Session(engine) as session:
         result = session.scalar(
             select(Movie).where(
@@ -37,7 +36,7 @@ def delete_movie(guild_id: int, title: str) -> bool:
             return True
         return False
 
-def clear_movies_by_status(guild_id: int, status: str):
+def clear_movies_by_status(guild_id: str, status: str):
     with Session(engine) as session:
         movies = session.scalars(
             select(Movie).where(
@@ -51,7 +50,7 @@ def clear_movies_by_status(guild_id: int, status: str):
 
 # === Filters ===
 
-def get_movie_by_title(guild_id: int, title: str) -> Optional[Movie]:
+def get_movie_by_title(guild_id: str, title: str) -> Optional[Movie]:
     with Session(engine) as session:
         return session.scalar(
             select(Movie).where(
@@ -69,7 +68,7 @@ def get_movies_by_status(guild_id: str, status: str) -> List[Movie]:
             )
         ).all()
 
-def get_currently_watching_movies(guild_id: int) -> List[Movie]:
+def get_currently_watching_movies(guild_id: str) -> List[Movie]:
     return get_movies_by_status(guild_id, "currently-watching")
 
 # === Embeds ===
@@ -96,8 +95,8 @@ def create_embed(movie: Movie, title_prefix="", color=discord.Color.teal()) -> d
 
 # === Channel Updates ===
 
-async def update_channel(bot: discord.Client, guild_id: int, channel_name: str, status: str, title_prefix="", color=discord.Color.teal()):
-    guild = bot.get_guild(guild_id)
+async def update_channel(bot: discord.Client, guild_id: str, channel_name: str, status: str, title_prefix="", color=discord.Color.teal()):
+    guild = bot.get_guild(int(guild_id))
     if not guild:
         print("⚠️ Guild not found.")
         return
@@ -124,17 +123,17 @@ async def update_channel(bot: discord.Client, guild_id: int, channel_name: str, 
         embed = create_embed(movie, title_prefix, color)
         await channel.send(embed=embed)
 
-async def update_watchlist_channel(bot: discord.Client, guild_id: int):
+async def update_watchlist_channel(bot: discord.Client, guild_id: str):
     await update_channel(bot, guild_id, "watchlist", "watchlist", color=discord.Color.teal())
 
-async def update_currently_watching_channel(bot: discord.Client, guild_id: int):
+async def update_currently_watching_channel(bot: discord.Client, guild_id: str):
     await update_channel(bot, guild_id, "currently-watching", "currently-watching", "🎬 Currently Watching: ", color=discord.Color.orange())
 
-async def update_downloaded_channel(bot: discord.Client, guild_id: int):
+async def update_downloaded_channel(bot: discord.Client, guild_id: str):
     await update_channel(bot, guild_id, "downloaded", "downloaded", color=discord.Color.green())
 
-async def update_watched_channel(bot: discord.Client, guild_id: int):
-    await update_channel(bot, guild_id, "watched", "watched", color=discord.Color.purple())
+async def update_watched_channel(bot: discord.Client, guild_id: str):
+    await update_channel(bot, guild_id, "watched", "watched", color=discord.Color.rgba(255, 180, 105))
 
 # === Backup ===
 
@@ -142,7 +141,6 @@ def create_backup_zip():
     zip_path = Path("backups/backup.zip")
     zip_path.parent.mkdir(parents=True, exist_ok=True)
     with ZipFile(zip_path, "w") as zipf:
-        # You can dump raw SQL here later if needed
         pass
     return zip_path
 
