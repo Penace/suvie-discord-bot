@@ -68,6 +68,15 @@ def get_movies_by_status(guild_id: int, status: str) -> List[Movie]:
             )
         ).all()
 
+def get_downloaded_movies(guild_id: int) -> List[Movie]:
+    with Session(engine) as session:
+        return session.scalars(
+            select(Movie).where(
+                Movie.guild_id == guild_id,
+                Movie.downloaded == True
+            )
+        ).all()
+
 def get_currently_watching_movies(guild_id: int) -> List[Movie]:
     return get_movies_by_status(guild_id, "currently-watching")
 
@@ -95,7 +104,7 @@ def create_embed(movie: Movie, title_prefix="", color=discord.Color.teal()) -> d
 
 # === Channel Updates ===
 
-async def update_channel(bot: discord.Client, guild_id: int, channel_name: str, status: str, title_prefix="", color=discord.Color.teal()):
+async def update_channel(bot: discord.Client, guild_id: int, channel_name: str, movies: List[Movie], title_prefix="", color=discord.Color.teal()):
     guild = bot.get_guild(guild_id)
     if not guild:
         print("⚠️ Guild not found.")
@@ -113,7 +122,6 @@ async def update_channel(bot: discord.Client, guild_id: int, channel_name: str, 
             return
 
     await channel.purge(limit=10)
-    movies = get_movies_by_status(guild_id, status)
 
     if not movies:
         await channel.send("📭 Nothing to show here.")
@@ -124,16 +132,20 @@ async def update_channel(bot: discord.Client, guild_id: int, channel_name: str, 
         await channel.send(embed=embed)
 
 async def update_watchlist_channel(bot: discord.Client, guild_id: int):
-    await update_channel(bot, guild_id, "watchlist", "watchlist", color=discord.Color.teal())
+    movies = get_movies_by_status(guild_id, "watchlist")
+    await update_channel(bot, guild_id, "watchlist", movies, color=discord.Color.teal())
 
 async def update_currently_watching_channel(bot: discord.Client, guild_id: int):
-    await update_channel(bot, guild_id, "currently-watching", "currently-watching", "🎬 Currently Watching: ", color=discord.Color.orange())
+    movies = get_movies_by_status(guild_id, "currently-watching")
+    await update_channel(bot, guild_id, "currently-watching", movies, "🎬 Currently Watching: ", color=discord.Color.orange())
 
 async def update_downloaded_channel(bot: discord.Client, guild_id: int):
-    await update_channel(bot, guild_id, "downloaded", "downloaded", color=discord.Color.green())
+    movies = get_downloaded_movies(guild_id)
+    await update_channel(bot, guild_id, "downloaded", movies, color=discord.Color.green())
 
 async def update_watched_channel(bot: discord.Client, guild_id: int):
-    await update_channel(bot, guild_id, "watched", "watched", color=discord.Color.purple())
+    movies = get_movies_by_status(guild_id, "watched")
+    await update_channel(bot, guild_id, "watched", movies, color=discord.Color.purple())
 
 # === Backup ===
 

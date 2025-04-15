@@ -11,12 +11,14 @@ from dotenv import load_dotenv
 from typing import Optional, Dict, List
 from openai.types.chat import ChatCompletionMessageParam
 
-from bot.utils.storage import get_or_create_text_channel
+from bot.utils.storage import get_or_create_text_channel  # Channel creation helper
 
 load_dotenv()
 client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
 
 class AICompanionCog(commands.Cog):
+    """suvie: Your Discord AI Companion."""
+
     def __init__(self, bot: commands.Bot):
         self.bot = bot
         self.channel_name = "suvie-ai"
@@ -26,7 +28,7 @@ class AICompanionCog(commands.Cog):
     async def on_ready(self):
         for guild in self.bot.guilds:
             await get_or_create_text_channel(self.bot, guild, self.channel_name)
-        print("🤖 AI ready: Listening in #suvie-ai")
+        print("🧠 AI ready: Listening in suvie-ai...")
 
     @commands.Cog.listener()
     async def on_message(self, message: discord.Message):
@@ -37,43 +39,48 @@ class AICompanionCog(commands.Cog):
 
         guild_id = message.guild.id if message.guild else 0
         user_id = message.author.id
-        content = message.content.strip()
-        if not content:
+        user_input = message.content.strip()
+        if not user_input:
             return
 
-        # === Memory Init ===
+        # Prevent responding more than once
+        if message.reference:
+            return
+
+        # Initialize memory
         self.memory.setdefault(guild_id, {}).setdefault(user_id, [])
-        convo = self.memory[guild_id][user_id]
-        convo.append({"role": "user", "content": content})
-        convo[:] = convo[-5:]  # Keep recent 5 interactions
+        convo: List[ChatCompletionMessageParam] = self.memory[guild_id][user_id]
 
-        # === Detect Suvie Command (Optional logic) ===
-        detected = self.detect_command(content)
+        convo.append({"role": "user", "content": user_input})
+        convo[:] = convo[-5:]  # Keep memory short and sweet
+
+        # 🛠️ Optional NLP Command Detection
+        detected = self.detect_command(user_input)
         if detected:
-            await message.channel.send(
-                f"🛠️ Detected command: `{detected['action']}` → **{detected['title']}**"
-            )
+            await message.channel.send(f"🛠️ Detected command: `{detected['action']}` → **{detected['title']}**")
             return
 
-        # === AI Response Generation ===
-        try:
-            messages: List[ChatCompletionMessageParam] = [
-                {
-                    "role": "system",
-                    "content": (
-                        "You are Suvie, a helpful and warm AI companion on Discord.\n"
-                        "Speak casually like a friend. Avoid robotic or formal language.\n"
-                        "You love discussing movies and TV shows.\n"
-                        "Be immersive, playful, and personal — stay in character!"
-                    )
-                }
-            ] + convo
+        # 🧠 AI Response Logic
+        messages: List[ChatCompletionMessageParam] = [
+            {
+                "role": "system",
+                "content": (
+                    "You are suvie, a helpful and warm AI companion on Discord.\n"
+                    "Speak casually, like a close friend. Avoid robotic language.\n"
+                    "You love movies and TV shows. Be immersive, playful, and personal.\n"
+                    "Use memory of recent context.\n"
+                    "Only reply in character and stay on-topic."
+                )
+            }
+        ] + convo
 
+        try:
             response = client.chat.completions.create(
                 model="gpt-3.5-turbo",
                 messages=messages,
-                max_tokens=150,
-                temperature=0.7
+                max_tokens=110,
+                temperature=0.7,
+                top_p=1.0,
             )
 
             reply_raw = response.choices[0].message.content
@@ -81,15 +88,14 @@ class AICompanionCog(commands.Cog):
             convo.append({"role": "assistant", "content": reply})
             convo[:] = convo[-5:]
 
-            # ✅ Reply only once
             await message.channel.send(reply)
 
         except Exception as e:
             print(f"[Suvie AI Error] {type(e).__name__}: {e}")
             await message.channel.send("⚠️ Suvie had a brain freeze. Try again in a moment!")
 
-    def detect_command(self, content: str) -> Optional[dict]:
-        lowered = content.lower()
+    def detect_command(self, message: str) -> Optional[dict]:
+        lowered = message.lower()
         command_keywords = {
             "add": ["add", "put", "include", "insert"],
             "remove": ["remove", "delete", "take out"],

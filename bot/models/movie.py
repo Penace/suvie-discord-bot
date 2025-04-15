@@ -1,4 +1,4 @@
-from sqlalchemy import Column, Integer, String, Text, BigInteger
+from sqlalchemy import Column, Integer, String, Text, BigInteger, Boolean
 from bot.utils.database import Base
 
 class Movie(Base):
@@ -22,6 +22,7 @@ class Movie(Base):
     timestamp = Column(String, nullable=True)
     filepath = Column(String, nullable=True)
     status = Column(String, index=True)
+    downloaded = Column(Boolean, default=False)
     
     def to_dict(self):
         return {
