@@ -2,6 +2,7 @@ import sys
 import os
 sys.path.append(os.path.dirname(os.path.abspath(__file__)))
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
+
 import discord
 from discord.ext import commands
 from discord import app_commands
@@ -23,13 +24,7 @@ class DownloadedCog(commands.GroupCog, name="downloaded"):
         imdb_id="The IMDb ID (optional).",
         filepath="Path to the downloaded file (optional)."
     )
-    async def add(
-        self,
-        interaction: discord.Interaction,
-        title: str,
-        imdb_id: Optional[str] = None,
-        filepath: Optional[str] = None
-    ):
+    async def add(self, interaction: discord.Interaction, title: str, imdb_id: Optional[str] = None, filepath: Optional[str] = None):
         await interaction.response.defer(ephemeral=True)
         guild_id = interaction.guild_id
         print(f"📥 /downloaded add: {title}")
@@ -38,36 +33,36 @@ class DownloadedCog(commands.GroupCog, name="downloaded"):
             with Session(engine) as session:
                 match = session.query(Movie).filter(
                     Movie.guild_id == guild_id,
-                    (func.lower(Movie.title) == title.lower()) |
-                    (Movie.imdb_id == imdb_id)
+                    (func.lower(Movie.title) == title.lower()) | (Movie.imdb_id == imdb_id)
                 ).first()
 
                 if not match:
                     await interaction.followup.send("❌ Title not found in your library.", ephemeral=True)
                     return
 
-                match.filepath = filepath or match.filepath or None
+                match.filepath = filepath or match.filepath
                 match.status = "downloaded"
                 session.commit()
+                print("✅ Movie updated to 'downloaded'.")
 
-            await update_downloaded_channel(self.bot, guild_id)
+                await update_downloaded_channel(self.bot, guild_id)
 
-            suffix = f" (S{match.season:02}E{match.episode:02})" if match.type == "series" and match.season and match.episode else ""
-            embed = discord.Embed(
-                title=f"📥 Marked as Downloaded: {match.title}{suffix}",
-                color=discord.Color.gold()
-            )
-            if match.filepath:
-                embed.add_field(name="File", value=match.filepath, inline=False)
-            if match.imdb_url:
-                embed.add_field(name="IMDb", value=match.imdb_url, inline=False)
-            if match.poster and match.poster != "N/A":
-                embed.set_thumbnail(url=match.poster)
+                suffix = f" (S{match.season:02}E{match.episode:02})" if match.type == "series" and match.season and match.episode else ""
+                embed = discord.Embed(
+                    title=f"📥 Marked as Downloaded: {match.title}{suffix}",
+                    color=discord.Color.gold()
+                )
+                if match.filepath:
+                    embed.add_field(name="File", value=match.filepath, inline=False)
+                if match.imdb_url:
+                    embed.add_field(name="IMDb", value=match.imdb_url, inline=False)
+                if match.poster and match.poster != "N/A":
+                    embed.set_thumbnail(url=match.poster)
 
-            await interaction.followup.send(embed=embed, ephemeral=True)
+                await interaction.followup.send(embed=embed, ephemeral=True)
 
         except Exception as e:
-            print(f"❌ Error in /downloaded add: {e}")
+            print(f"❌ Error in /downloaded add: {type(e).__name__}: {e}")
             await interaction.followup.send("❌ Failed to mark as downloaded.", ephemeral=True)
 
     @app_commands.command(name="edit", description="Edit the file path of a downloaded movie.")
@@ -90,18 +85,19 @@ class DownloadedCog(commands.GroupCog, name="downloaded"):
 
                 movie.filepath = filepath
                 session.commit()
+                print("✅ Filepath updated.")
 
-            await update_downloaded_channel(self.bot, guild_id)
+                await update_downloaded_channel(self.bot, guild_id)
 
-            embed = discord.Embed(
-                title=f"✏️ Filepath Updated: {movie.title}",
-                color=discord.Color.gold()
-            )
-            embed.add_field(name="New File Path", value=filepath, inline=False)
-            await interaction.followup.send(embed=embed, ephemeral=True)
+                embed = discord.Embed(
+                    title=f"✏️ Filepath Updated: {movie.title}",
+                    color=discord.Color.gold()
+                )
+                embed.add_field(name="New File Path", value=filepath, inline=False)
+                await interaction.followup.send(embed=embed, ephemeral=True)
 
         except Exception as e:
-            print(f"❌ Error in /downloaded edit: {e}")
+            print(f"❌ Error in /downloaded edit: {type(e).__name__}: {e}")
             await interaction.followup.send("❌ Failed to update file path.", ephemeral=True)
 
     @app_commands.command(name="remove", description="Remove a movie from downloaded list.")
@@ -125,17 +121,18 @@ class DownloadedCog(commands.GroupCog, name="downloaded"):
                 movie.status = "watchlist"
                 movie.filepath = None
                 session.commit()
+                print("✅ Movie removed from 'downloaded'.")
 
-            await update_downloaded_channel(self.bot, guild_id)
+                await update_downloaded_channel(self.bot, guild_id)
 
-            embed = discord.Embed(
-                title=f"🗑️ Removed from Downloaded: {movie.title}",
-                color=discord.Color.red()
-            )
-            await interaction.followup.send(embed=embed, ephemeral=True)
+                embed = discord.Embed(
+                    title=f"🗑️ Removed from Downloaded: {movie.title}",
+                    color=discord.Color.red()
+                )
+                await interaction.followup.send(embed=embed, ephemeral=True)
 
         except Exception as e:
-            print(f"❌ Error in /downloaded remove: {e}")
+            print(f"❌ Error in /downloaded remove: {type(e).__name__}: {e}")
             await interaction.followup.send("❌ Failed to remove from downloaded.", ephemeral=True)
 
 # === Cog Loader ===

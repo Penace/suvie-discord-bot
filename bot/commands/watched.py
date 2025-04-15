@@ -31,9 +31,12 @@ class WatchedCog(commands.Cog):
         filepath: Optional[str] = None
     ):
         await interaction.response.defer(ephemeral=True)
-        print(f"🎞️ /watched: {title}")
+        print(f"🎞️ /watched triggered with title: {title}")
 
         guild_id = interaction.guild_id
+        if not isinstance(guild_id, int):
+            await interaction.followup.send("❌ This command must be run in a server.", ephemeral=True)
+            return
 
         try:
             with Session(engine) as session:
@@ -46,7 +49,6 @@ class WatchedCog(commands.Cog):
                     await interaction.followup.send("❌ Movie not found in your library.", ephemeral=True)
                     return
 
-                # === Update movie data ===
                 movie.status = "watched"
                 if movie.type == "series":
                     if season:
@@ -58,14 +60,13 @@ class WatchedCog(commands.Cog):
 
                 now = datetime.now()
                 movie.timestamp = timestamp or now.strftime("%H:%M:%S %d/%m/%Y")
-
                 session.commit()
-                print("✅ Movie marked as watched.")
+                print("✅ Movie updated to 'watched'.")
 
-            # === Embed confirmation ===
-            title_display = f"{movie.title} (S{int(movie.season):02}E{int(movie.episode):02})" if movie.type == "series" else movie.title
+            # === Format embed ===
+            suffix = f" (S{int(movie.season or 1):02}E{int(movie.episode or 1):02})" if movie.type == "series" else ""
             embed = discord.Embed(
-                title=f"✅ Archived: {title_display}",
+                title=f"✅ Archived: {movie.title}{suffix}",
                 color=discord.Color.from_rgb(255, 105, 180)
             )
             embed.add_field(name="Watched At", value=movie.timestamp, inline=True)
@@ -80,12 +81,15 @@ class WatchedCog(commands.Cog):
             if movie.poster and movie.poster != "N/A":
                 embed.set_thumbnail(url=movie.poster)
 
-            # === Update watched channel ===
-            await update_watched_channel(self.bot, guild_id)
+            try:
+                await update_watched_channel(self.bot, guild_id)
+            except Exception as e:
+                print(f"⚠️ Channel update error: {type(e).__name__}: {e}")
+
             await interaction.followup.send(embed=embed, ephemeral=True)
 
         except Exception as e:
-            print(f"❌ Error in /watched: {e}")
+            print(f"❌ /watched failed: {type(e).__name__}: {e}")
             await interaction.followup.send("❌ Failed to mark as watched.", ephemeral=True)
 
 # === Cog Loader ===
