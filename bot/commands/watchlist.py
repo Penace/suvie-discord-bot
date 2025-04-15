@@ -27,7 +27,13 @@ class WatchlistGroup(commands.GroupCog, name="watchlist"):
         self.bot = bot
 
     @app_commands.command(name="add", description="Add a movie or show to your watchlist.")
-    async def add(self, interaction: discord.Interaction, title: str):
+    @app_commands.describe(
+        title="The title of the movie or show",
+        season="Season number (for series)",
+        episode="Episode number (for series)",
+        imdb_id = "IMDb ID (optional)"
+    )
+    async def add(self, interaction: discord.Interaction, title: str, season: Optional[int] = None, episode: Optional[int] = None, imdb_id: Optional[str] = None):
         await interaction.response.defer(ephemeral=True)
         print("✅ /watchlist add triggered with title:", title)
 
@@ -54,6 +60,8 @@ class WatchlistGroup(commands.GroupCog, name="watchlist"):
                 director=movie_data.get("director"),
                 actors=movie_data.get("actors"),
                 type=movie_data.get("type", "movie"),
+                season=season if movie_data.get("type") == "series" else None,
+                episode=episode if movie_data.get("type") == "series" else None,
                 status="watchlist"
             )
 
@@ -74,7 +82,7 @@ class WatchlistGroup(commands.GroupCog, name="watchlist"):
     @app_commands.command(name="remove", description="Remove a movie or show from your watchlist.")
     async def remove(self, interaction: discord.Interaction, title: str):
         await interaction.response.defer(ephemeral=True)
-        print("🖑️ /watchlist remove triggered with title:", title)
+        print("🔑️ /watchlist remove triggered with title:", title)
 
         try:
             guild_id = interaction.guild_id
@@ -92,7 +100,7 @@ class WatchlistGroup(commands.GroupCog, name="watchlist"):
 
                 session.delete(movie)
                 session.commit()
-                print(f"🖑️ Deleted '{title}' from watchlist")
+                print(f"🔑️ Deleted '{title}' from watchlist")
 
             await update_watchlist_channel(self.bot, guild_id)
             await interaction.followup.send(f"🗑️ Removed **{title}** from your watchlist.", ephemeral=True)
@@ -111,7 +119,7 @@ class WatchlistGroup(commands.GroupCog, name="watchlist"):
             watchlist = get_movies_by_status(guild_id, "watchlist")
 
             if not watchlist:
-                await interaction.followup.send("📭 Your watchlist is empty.", ephemeral=True)
+                await interaction.followup.send("📜 Your watchlist is empty.", ephemeral=True)
                 return
 
             for movie in watchlist:

@@ -2,6 +2,7 @@ import sys
 import os
 sys.path.append(os.path.dirname(os.path.abspath(__file__)))
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
+
 import discord
 from discord import app_commands
 from discord.ext import commands, tasks
@@ -13,7 +14,7 @@ from bot.utils.database import SessionLocal
 from bot.models.movie import Movie
 from bot.utils.storage import get_or_create_text_channel
 
-class StatusCog(commands.Cog):
+class StatusCog(commands.GroupCog, name="status"):  # 👈 Make it a GroupCog
     def __init__(self, bot: commands.Bot):
         self.bot = bot
         self.start_time = datetime.now()
@@ -32,13 +33,7 @@ class StatusCog(commands.Cog):
                 return session.query(Movie).count()
         except Exception as e:
             print(f"[Status DB Error] {type(e).__name__}: {e}")
-            return -1  # Use -1 to signal DB failure
-
-    @app_commands.command(name="status", description="View Suvie's system status.")
-    async def status(self, interaction: discord.Interaction):
-        await interaction.response.defer(ephemeral=True)
-        embed = self.generate_status_embed()
-        await interaction.followup.send(embed=embed, ephemeral=True)
+            return -1
 
     def generate_status_embed(self) -> discord.Embed:
         total_movies = self.get_total_movies()
@@ -53,10 +48,28 @@ class StatusCog(commands.Cog):
         embed.add_field(name="📜 Commands", value=str(len(self.bot.tree.get_commands())), inline=True)
         embed.add_field(name="🖥️ Platform", value=f"{platform.system()} {platform.release()}", inline=True)
         embed.add_field(name="📅 Last Check", value=datetime.now().strftime("%Y-%m-%d %H:%M:%S"), inline=False)
-        embed.set_footer(text="Auto-refreshes every 5 minutes.")
+        embed.set_footer(text="Auto-refreshes every 12 minutes. Try /status ping to test latency.")
         return embed
 
-    @tasks.loop(minutes=5)
+    @app_commands.command(name="status", description="View Suvie's system status.")
+    async def status(self, interaction: discord.Interaction):
+        await interaction.response.defer(ephemeral=True)
+        embed = self.generate_status_embed()
+        await interaction.followup.send(embed=embed, ephemeral=True)
+
+    @app_commands.command(name="ping", description="Check Suvie's response time.")
+    async def ping(self, interaction: discord.Interaction):
+        await interaction.response.defer(ephemeral=True)
+        latency_ms = round(self.bot.latency * 1000)
+        embed = discord.Embed(
+            title="🏓 Pong!",
+            description=f"Latency: `{latency_ms}ms`",
+            color=discord.Color.green()
+        )
+        embed.set_footer(text=f"Uptime: {self.get_uptime()}")
+        await interaction.followup.send(embed=embed, ephemeral=True)
+
+    @tasks.loop(minutes=12)
     async def update_status_channel(self):
         for guild in self.bot.guilds:
             channel = await get_or_create_text_channel(self.bot, guild, self.status_channel_name)
@@ -74,4 +87,4 @@ class StatusCog(commands.Cog):
 # === Cog Loader ===
 async def setup(bot: commands.Bot):
     await bot.add_cog(StatusCog(bot))
-    print("📊 Loaded cog: status")
+    print("📊 Loaded cog: status group")

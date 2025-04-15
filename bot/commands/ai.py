@@ -10,7 +10,7 @@ from dotenv import load_dotenv
 from typing import Optional, Dict, List
 from openai.types.chat import ChatCompletionMessageParam
 
-from bot.utils.storage import get_or_create_text_channel  # Channel creation helper
+from bot.utils.storage import get_or_create_text_channel
 
 load_dotenv()
 client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
@@ -42,20 +42,17 @@ class AICompanionCog(commands.Cog):
         if not user_input:
             return
 
-        # Initialize memory
         self.memory.setdefault(guild_id, {}).setdefault(user_id, [])
         convo: List[ChatCompletionMessageParam] = self.memory[guild_id][user_id]
 
         convo.append({"role": "user", "content": user_input})
-        convo[:] = convo[-5:]  # Keep memory short and sweet
+        convo[:] = convo[-5:]
 
-        # 🛠️ Optional NLP Command Detection
         detected = self.detect_command(user_input)
         if detected:
             await message.channel.send(f"🛠️ Detected command: `{detected['action']}` → **{detected['title']}**")
             return
 
-        # 🧠 AI Response Logic
         messages: List[ChatCompletionMessageParam] = [
             {
                 "role": "system",
@@ -79,7 +76,7 @@ class AICompanionCog(commands.Cog):
             )
 
             reply_raw = response.choices[0].message.content
-            reply = reply_raw.strip() if reply_raw else "🤖 (No response)"
+            reply = reply_raw.strip() if reply_raw else "🧠 (No response)"
             convo.append({"role": "assistant", "content": reply})
             convo[:] = convo[-5:]
 
@@ -108,4 +105,4 @@ class AICompanionCog(commands.Cog):
 # === Cog Loader ===
 async def setup(bot: commands.Bot):
     await bot.add_cog(AICompanionCog(bot))
-    print("🤖 Loaded cog: ai")
+    print("🧠 Loaded cog: ai")
