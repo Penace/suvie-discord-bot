@@ -144,7 +144,7 @@ class WatchlistGroup(commands.GroupCog, name="watchlist"):
                 session.commit()
                 print(f"🧹 Cleared {count} entries")
 
-            await update_watchlist_channel(self.bot, int(interaction.guild_id))
+            await update_watchlist_channel(self.bot, str(interaction.guild_id))
 
             if count:
                 await interaction.followup.send("✅ Watchlist cleared.", ephemeral=True)
