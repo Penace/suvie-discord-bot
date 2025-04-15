@@ -70,7 +70,7 @@ class WatchlistGroup(commands.GroupCog, name="watchlist"):
                 session.commit()
                 print("💾 Movie saved to DB:", new_movie.title)
 
-            await update_watchlist_channel(self.bot, int(interaction.guild_id))
+            await update_watchlist_channel(self.bot, str(interaction.guild_id))
             embed = create_embed(new_movie, title_prefix="🎬 Added to Watchlist: ", color=discord.Color.teal())
             await interaction.followup.send(embed=embed, ephemeral=True)
 
@@ -103,7 +103,7 @@ class WatchlistGroup(commands.GroupCog, name="watchlist"):
                 session.commit()
                 print(f"🗑️ Removed: {movie.title}")
 
-            await update_watchlist_channel(self.bot, int(interaction.guild_id))
+            await update_watchlist_channel(self.bot, str(interaction.guild_id))
             await interaction.followup.send(f"🗑️ Removed **{movie.title}** from your watchlist.", ephemeral=True)
 
         except Exception as e:
