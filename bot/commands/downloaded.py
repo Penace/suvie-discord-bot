@@ -47,100 +47,37 @@ class DownloadedCog(commands.GroupCog, name="downloaded"):
                     await interaction.followup.send("❌ Title not found in your library.", ephemeral=True)
                     return
 
-                # ✅ ONLY update filepath, do not change status
                 match.filepath = filepath or match.filepath or None
+                match.status = "downloaded"
+
+                # Cache display values before closing session
+                title_display = match.title
+                suffix = f" (S{match.season:02}E{match.episode:02})" if match.type == "series" and match.season and match.episode else ""
+                file = match.filepath
+                imdb = match.imdb_url
+                poster = match.poster
+
                 session.commit()
+                print("✅ Movie marked as downloaded.")
 
             await update_downloaded_channel(self.bot, guild_id)
 
-            suffix = f" (S{match.season:02}E{match.episode:02})" if match.type == "series" and match.season and match.episode else ""
             embed = discord.Embed(
-                title=f"📥 File Registered: {match.title}{suffix}",
-                description="Marked as downloaded (status unchanged).",
+                title=f"📥 Marked as Downloaded: {title_display}{suffix}",
                 color=discord.Color.gold()
             )
-            if match.filepath:
-                embed.add_field(name="File", value=match.filepath, inline=False)
-            if match.imdb_url:
-                embed.add_field(name="IMDb", value=match.imdb_url, inline=False)
-            if match.poster and match.poster != "N/A":
-                embed.set_thumbnail(url=match.poster)
+            if file:
+                embed.add_field(name="File", value=file, inline=False)
+            if imdb:
+                embed.add_field(name="IMDb", value=imdb, inline=False)
+            if poster and poster != "N/A":
+                embed.set_thumbnail(url=poster)
 
             await interaction.followup.send(embed=embed, ephemeral=True)
 
         except Exception as e:
-            print(f"❌ Error in /downloaded add: {e}")
+            print(f"❌ Error in /downloaded add: {type(e).__name__}: {e}")
             await interaction.followup.send("❌ Failed to mark as downloaded.", ephemeral=True)
-
-    @app_commands.command(name="edit", description="Edit the file path of a downloaded movie.")
-    async def edit(self, interaction: discord.Interaction, title: str, filepath: str):
-        await interaction.response.defer(ephemeral=True)
-        guild_id = interaction.guild_id
-        print(f"✏️ /downloaded edit: {title} → {filepath}")
-
-        try:
-            with Session(engine) as session:
-                movie = session.query(Movie).filter(
-                    Movie.guild_id == guild_id,
-                    func.lower(Movie.title) == title.lower(),
-                    Movie.status == "downloaded"
-                ).first()
-
-                if not movie:
-                    await interaction.followup.send("❌ Movie not found in downloaded list.", ephemeral=True)
-                    return
-
-                movie.filepath = filepath
-                session.commit()
-                print("✅ Filepath updated.")
-
-                await update_downloaded_channel(self.bot, guild_id)
-
-                embed = discord.Embed(
-                    title=f"✏️ Filepath Updated: {movie.title}",
-                    color=discord.Color.gold()
-                )
-                embed.add_field(name="New File Path", value=filepath, inline=False)
-                await interaction.followup.send(embed=embed, ephemeral=True)
-
-        except Exception as e:
-            print(f"❌ Error in /downloaded edit: {type(e).__name__}: {e}")
-            await interaction.followup.send("❌ Failed to update file path.", ephemeral=True)
-
-    @app_commands.command(name="remove", description="Remove a movie from downloaded list.")
-    async def remove(self, interaction: discord.Interaction, title: str):
-        await interaction.response.defer(ephemeral=True)
-        guild_id = interaction.guild_id
-        print(f"🗑️ /downloaded remove: {title}")
-
-        try:
-            with Session(engine) as session:
-                movie = session.query(Movie).filter(
-                    Movie.guild_id == guild_id,
-                    func.lower(Movie.title) == title.lower(),
-                    Movie.status == "downloaded"
-                ).first()
-
-                if not movie:
-                    await interaction.followup.send("❌ Movie not found in downloaded list.", ephemeral=True)
-                    return
-
-                movie.status = "watchlist"
-                movie.filepath = None
-                session.commit()
-                print("✅ Movie removed from 'downloaded'.")
-
-                await update_downloaded_channel(self.bot, guild_id)
-
-                embed = discord.Embed(
-                    title=f"🗑️ Removed from Downloaded: {movie.title}",
-                    color=discord.Color.red()
-                )
-                await interaction.followup.send(embed=embed, ephemeral=True)
-
-        except Exception as e:
-            print(f"❌ Error in /downloaded remove: {type(e).__name__}: {e}")
-            await interaction.followup.send("❌ Failed to remove from downloaded.", ephemeral=True)
 
 # === Cog Loader ===
 async def setup(bot: commands.Bot):
