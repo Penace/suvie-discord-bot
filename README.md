@@ -99,26 +99,30 @@ More: docs/COMMANDS.md
 
 ### ✅ Version 3
 
+```text
 •	TV show support (season/episode)
 •	Multi-entry currentlywatching
 •	/repair command
 •	Refactored UI embed system
-
+```
 ### ⏭️ Version 4
+```text
 •	Fuzzy title matching
 •	GUI frontend @ suvie.me
 •	Slash command sync helper
 •	Public SaaS-ready backend
+```
 
 ---
 
 ## 💖 Support & Contribute
 
+```text
 If you like the project and want to support it:
 •	[![Ko-fi](https://ko-fi.com/img/githubbutton_sm.svg)](https://ko-fi.com/P5P51DOQ6D), [![Buy Me a Coffee](https://img.shields.io/badge/Buy%20Me%20a%20Coffee-FFDD00?style=for-the-badge&logo=buy-me-a-coffee&logoColor=black)](https://buymeacoffee.com/penace)
 •	⭐ Star this repo
 •	🛠️ Submit a PR or suggestion
-
+```
 See docs/SUPPORT.md for full contributor info.
 
 ---
