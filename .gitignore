@@ -5,6 +5,7 @@
 # IDE/editor settings
 .vscode/
 .idea/
+.vscode
 
 # System
 .DS_Store
