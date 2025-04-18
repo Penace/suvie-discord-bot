@@ -146,6 +146,69 @@ class DownloadedCog(commands.GroupCog, name="downloaded"):
             print(f"❌ Error in /downloaded remove: {type(e).__name__}: {e}")
             await interaction.followup.send("❌ Failed to remove from downloaded.", ephemeral=True)
 
+    @app_commands.command(name="view", description="View all downloaded movies or shows.")
+    async def view(self, interaction: discord.Interaction):
+        await interaction.response.defer(ephemeral=True)
+        guild_id = interaction.guild_id
+        print(f"👀 /downloaded view")
+
+        try:
+            with Session(engine) as session:
+                movies = session.query(Movie).filter(
+                    Movie.guild_id == guild_id,
+                    Movie.downloaded.is_(True)
+                ).all()
+
+            if not movies:
+                await interaction.followup.send("📭 No downloaded content found.", ephemeral=True)
+                return
+
+            for movie in movies:
+                suffix = f" (S{movie.season:02}E{movie.episode:02})" if movie.type == "series" and movie.season and movie.episode else ""
+                embed = discord.Embed(
+                    title=f"📥 {movie.title}{suffix}",
+                    color=discord.Color.gold()
+                )
+                if movie.filepath:
+                    embed.add_field(name="File", value=movie.filepath, inline=False)
+                if movie.imdb_url:
+                    embed.add_field(name="IMDb", value=movie.imdb_url, inline=False)
+                if movie.poster and movie.poster != "N/A":
+                    embed.set_thumbnail(url=movie.poster)
+                await interaction.followup.send(embed=embed, ephemeral=True)
+
+        except Exception as e:
+            print(f"❌ Error in /downloaded view: {type(e).__name__}: {e}")
+            await interaction.followup.send("❌ Failed to fetch downloaded list.", ephemeral=True)
+
+
+    @app_commands.command(name="clear", description="Clear all downloaded items from the list.")
+    async def clear(self, interaction: discord.Interaction):
+        await interaction.response.defer(ephemeral=True)
+        guild_id = interaction.guild_id
+        print("🧹 /downloaded clear triggered")
+
+        try:
+            with Session(engine) as session:
+                count = session.query(Movie).filter(
+                    Movie.guild_id == guild_id,
+                    Movie.downloaded.is_(True)
+                ).update({Movie.downloaded: False})
+                session.commit()
+                print(f"🧹 Cleared {count} downloaded entries")
+
+            await update_downloaded_channel(self.bot, guild_id)
+
+            if count:
+                await interaction.followup.send("✅ Downloaded list cleared.", ephemeral=True)
+            else:
+                await interaction.followup.send("📭 No downloaded content to clear.", ephemeral=True)
+
+        except Exception as e:
+            print(f"❌ Error in /downloaded clear: {type(e).__name__}: {e}")
+            await interaction.followup.send("❌ Failed to clear downloaded list.", ephemeral=True)
+
+
 # === Cog Loader ===
 async def setup(bot: commands.Bot):
     await bot.add_cog(DownloadedCog(bot))

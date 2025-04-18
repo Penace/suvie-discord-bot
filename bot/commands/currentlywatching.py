@@ -11,9 +11,9 @@ from bot.utils.database import engine
 from bot.utils.storage import (
     get_movie_by_title,
     get_currently_watching_movies,
-    update_currently_watching_channel,
-    create_embed
+    update_currently_watching_channel
 )
+from bot.utils.ui import generate_movie_embed
 
 class CurrentlyWatchingCog(commands.GroupCog, name="currentlywatching"):
     def __init__(self, bot: commands.Bot):
@@ -162,7 +162,7 @@ class CurrentlyWatchingCog(commands.GroupCog, name="currentlywatching"):
                 return
 
             for movie in currently_watching:
-                embed = create_embed(movie, color=discord.Color.orange())
+                embed = generate_movie_embed(movie, color=discord.Color.orange())
                 await interaction.followup.send(embed=embed, ephemeral=True)
 
         except Exception as e:

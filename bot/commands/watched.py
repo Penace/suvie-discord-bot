@@ -10,9 +10,9 @@ from bot.models.movie import Movie
 from bot.utils.database import engine
 from bot.utils.storage import (
     get_movies_by_status,
-    update_watched_channel,
-    create_embed
+    update_watched_channel
 )
+from bot.utils.ui import generate_movie_embed
 
 class WatchedCog(commands.GroupCog, name="watched"):
     def __init__(self, bot: commands.Bot):
@@ -101,7 +101,7 @@ class WatchedCog(commands.GroupCog, name="watched"):
                 return
 
             for movie in movies:
-                embed = create_embed(movie, title_prefix="🎞️ Watched: ", color=discord.Color.from_rgb(255, 105, 180))
+                embed = generate_movie_embed(movie, title_prefix="🎞️ Watched: ")
                 await interaction.followup.send(embed=embed, ephemeral=True)
 
         except Exception as e:

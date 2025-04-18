@@ -8,6 +8,7 @@ from typing import Optional, List
 
 from bot.utils.database import engine
 from bot.models.movie import Movie
+from bot.utils.ui import generate_movie_embed
 
 BACKUP_DIR = Path("backups/json")
 
@@ -82,25 +83,25 @@ def get_currently_watching_movies(guild_id: int) -> List[Movie]:
 
 # === Embeds ===
 
-def create_embed(movie: Movie, title_prefix="", color=discord.Color.teal()) -> discord.Embed:
-    title = movie.title
-    if movie.type == "series":
-        season = int(movie.season or 1)
-        episode = int(movie.episode or 1)
-        title = f"{title} (S{season:02}E{episode:02})"
+# def create_embed(movie: Movie, title_prefix="", color=discord.Color.teal()) -> discord.Embed:
+#     title = movie.title
+#     if movie.type == "series":
+#         season = int(movie.season or 1)
+#         episode = int(movie.episode or 1)
+#         title = f"{title} (S{season:02}E{episode:02})"
 
-    embed = discord.Embed(title=f"{title_prefix}{title}", color=color)
+#     embed = discord.Embed(title=f"{title_prefix}{title}", color=color)
 
-    if movie.poster and movie.poster != "N/A":
-        embed.set_thumbnail(url=movie.poster)
+#     if movie.poster and movie.poster != "N/A":
+#         embed.set_thumbnail(url=movie.poster)
 
-    for key in ["genre", "year", "filepath", "timestamp", "imdb_url"]:
-        value = getattr(movie, key, None)
-        if value:
-            name = key.capitalize() if key != "imdb_url" else "IMDb"
-            embed.add_field(name=name, value=value, inline=(key != "filepath"))
+#     for key in ["genre", "year", "filepath", "timestamp", "imdb_url"]:
+#         value = getattr(movie, key, None)
+#         if value:
+#             name = key.capitalize() if key != "imdb_url" else "IMDb"
+#             embed.add_field(name=name, value=value, inline=(key != "filepath"))
 
-    return embed
+#     return embed
 
 # === Channel Updates ===
 
@@ -128,7 +129,7 @@ async def update_channel(bot: discord.Client, guild_id: int, channel_name: str, 
         return
 
     for movie in movies:
-        embed = create_embed(movie, title_prefix, color)
+        embed = generate_movie_embed(movie, title_prefix)
         await channel.send(embed=embed)
 
 async def update_watchlist_channel(bot: discord.Client, guild_id: int):

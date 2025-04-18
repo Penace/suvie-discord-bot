@@ -44,4 +44,5 @@ class Movie(Base):
             "timestamp": self.timestamp,
             "filepath": self.filepath,
             "status": self.status,
+            "downloaded": self.downloaded,
         }

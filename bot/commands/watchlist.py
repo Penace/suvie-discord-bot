@@ -17,10 +17,10 @@ from bot.utils.database import engine
 from bot.utils.storage import (
     get_movie_by_title,
     get_movies_by_status,
-    update_watchlist_channel,
-    create_embed
+    update_watchlist_channel
 )
 from bot.utils.imdb import fetch_movie_data
+from bot.utils.ui import generate_movie_embed
 
 class WatchlistGroup(commands.GroupCog, name="watchlist"):
     def __init__(self, bot: commands.Bot):
@@ -39,12 +39,13 @@ class WatchlistGroup(commands.GroupCog, name="watchlist"):
 
         guild_id = interaction.guild_id
 
-        if get_movie_by_title(guild_id, title):
+        existing = get_movie_by_title(guild_id, title)
+        if existing and existing.status == "watchlist":
             await interaction.followup.send("❌ This title is already in your watchlist.", ephemeral=True)
             return
 
         try:
-            movie_data = fetch_movie_data(title=title.strip())
+            movie_data = fetch_movie_data(imdb_id=imdb_id, title=title.strip())
             print("📦 OMDb response:", movie_data)
 
             new_movie = Movie(
@@ -72,7 +73,7 @@ class WatchlistGroup(commands.GroupCog, name="watchlist"):
 
             await update_watchlist_channel(self.bot, guild_id)
 
-            embed = create_embed(new_movie, title_prefix="🎬 Added to Watchlist: ", color=discord.Color.teal())
+            embed = generate_movie_embed(new_movie, title_prefix="🎬 Added to Watchlist: ")
             await interaction.followup.send(embed=embed, ephemeral=True)
 
         except Exception as e:
@@ -95,9 +96,20 @@ class WatchlistGroup(commands.GroupCog, name="watchlist"):
                 ).first()
 
                 if not movie:
-                    await interaction.followup.send("❌ Title not found in your watchlist.", ephemeral=True)
+                    # Suggest alternatives
+                    with Session(engine) as session:
+                        suggestions = session.query(Movie.title).filter(
+                            Movie.guild_id == guild_id,
+                            Movie.title.ilike(f"%{title}%"),
+                            Movie.status == "watchlist"
+                        ).all()
+                    titles = "\n".join(f"• {t[0]}" for t in suggestions[:10]) or "*No similar titles found*"
+                    await interaction.followup.send(
+                        f"❌ Title not found in your watchlist.\n\n**Did you mean:**\n{titles}",
+                        ephemeral=True
+                    )
                     return
-
+                
                 session.delete(movie)
                 session.commit()
                 print(f"🔑️ Deleted '{title}' from watchlist")
@@ -123,7 +135,7 @@ class WatchlistGroup(commands.GroupCog, name="watchlist"):
                 return
 
             for movie in watchlist:
-                embed = create_embed(movie, color=discord.Color.teal())
+                embed = generate_movie_embed(movie)
                 await interaction.followup.send(embed=embed, ephemeral=True)
 
         except Exception as e:
