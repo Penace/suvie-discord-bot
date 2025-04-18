@@ -59,3 +59,4 @@ This document provides a detailed list of all available slash commands in **Suvi
 
 - Auto backups are performed every time your list changes
 - Latest 5 backups stored in `backups/json/`
+
