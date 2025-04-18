@@ -16,6 +16,7 @@ movies.json
 movies_*.json
 *.json
 !bot/utils/*.json
+bot_backy/
 
 # Python
 *.pyc

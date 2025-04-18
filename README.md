@@ -11,53 +11,60 @@
 
 ---
 
-**Suvie** is a personal movie and TV show companion Discord bot for managing watchlists, tracking viewing progress, and organizing your media experience with style.
+**Suvie** is a stylish and intuitive Discord bot for managing your movie and TV show experiences. With seamless watchlist tracking, AI conversations, and organized embeds, it's your personal viewing companion.
 
 ---
 
 ## ✨ Features
 
-- 📺 **Watchlist Management** – Add, remove, view, and clear your watchlist with rich movie embeds.
-- 🎞️ **Currently Watching** – Track your current show or movie, including season/episode, timestamp, and filepath.
-- ✅ **Watched Archive** – Archive watched titles and preserve your history.
-- 📥 **Downloaded List** – Mark entries as downloaded and manage their filepaths.
-- 🔁 **Dynamic Reloading** – Reload commands without restarting the bot.
-- 💾 **Auto Backups** – Every change is backed up (last 5 versions preserved).
-- 📊 **Bot Status** – Monitor stats, uptime, and loaded features.
+- 📺 **Watchlist Management** – Add, remove, view, and clear movies with season/episode support.
+- 🎞️ **Currently Watching** – Track what's being watched, with S/E, file path, and timestamp.
+- ✅ **Watched Archive** – Keep a permanent record of completed media.
+- 📥 **Downloaded Tracker** – Manage and label downloaded files.
+- 💬 **Suvie AI** – Casual conversation and smart interaction in a dedicated channel.
+- 🔁 **Live Cog Reloading** – Reload modules without restarting.
+- 💾 **Auto Backup** – Movie history is stored in JSON backups.
+- 📊 **Bot Status Panel** – Get real-time stats in `#suvie-status`.
 
 ---
 
-## 🧠 Project Structure
+## 🧠 Directory Structure
 
 ```txt
 suvie-bot/
-├── commands/
-│   ├── addmovie.py
-│   ├── currentlywatching.py
-│   ├── downloaded.py
-│   ├── ping.py
-│   ├── reload.py
-│   ├── removemovie.py
-│   ├── status.py
-│   ├── watched.py
-│   └── watchlist.py
-├── utils/
-│   ├── imdb.py
-│   └── storage.py
+├── bot/
+│   ├── bot.py
+│   ├── commands/
+│   │   ├── ai.py
+│   │   ├── backup.py
+│   │   ├── currentlywatching.py
+│   │   ├── dev.py
+│   │   ├── downloaded.py
+│   │   ├── initserver.py
+│   │   ├── status.py
+│   │   ├── watched.py
+│   │   └── watchlist.py
+│   ├── models/
+│   │   └── movie.py
+│   ├── utils/
+│   │   ├── database.py
+│   │   ├── imdb.py
+│   │   ├── storage.py
+│   │   └── ui.py
 ├── backups/
 │   └── json/
-├── suvie.png
-├── suviebanner.png
-├── movies.json
+├── docs/
+│   └── commands.md
+├── create_tables.py
 ├── requirements.txt
 └── README.md
 ```
 
 ---
 
-## 🚀 Setup & Run
+## 🚀 Quickstart
 
-### 1. Clone & Install
+### 1. Setup
 ```bash
 git clone https://github.com/yourname/suvie-bot.git
 cd suvie-bot
@@ -66,81 +73,53 @@ source suvie-env/bin/activate
 pip install -r requirements.txt
 ```
 
-### 2. Create a `.env` file with:
+### 2. Configure
+Create a `.env` file:
 ```env
 DISCORD_TOKEN=your_token_here
 OMDB_API_KEY=your_omdb_key_here
 ```
 
-### 3. Run the bot
+### 3. Launch
 ```bash
-python3 bot.py
+python3 bot/bot.py
 ```
 
 ---
 
-## 🛠️ Slash Commands
+## 🛠️ Slash Command Overview
 
-| Group | Command                      | Description                            |
-|-------|------------------------------|----------------------------------------|
-| 📺 `/watchlist`       | `add`, `remove`, `view`, `clear`           | Manage your watchlist                 |
-| 🎞️ `/currentlywatching` | `set`, `view`, `update`, `next`, `remove`, `repair` | Track current viewing progress       |
-| 📥 `/downloaded`      | `add`, `edit`, `remove`                     | Manage downloaded items               |
-| ✅ `/watched`         | *(tbd)*                                     | Archive watched content               |
-| ⚙️ `/status`          | —                                          | Bot status & stats                    |
-| 🔁 `/reload`          | —                                          | Reload all commands live              |
-
-👉 Full details: [docs/commands.md](docs/commands.md)
+| Group | Command Set | Description |
+|-------|-------------|-------------|
+| `/watchlist` | add, remove, view, clear | Manage entries to be watched |
+| `/currentlywatching` | set, update, next, view, remove | Live show/movie tracking |
+| `/downloaded` | add, edit, remove, view, clear | Track downloaded files |
+| `/watched` | mark as watched (archive) | Record viewing history |
+| `/status` | summary panel | Bot diagnostics |
+| `/dev` | reload, sync | Admin-only tools |
+| `#suvie-ai` | natural conversation | Chat with your bot companion |
 
 ---
 
 ## 📌 Roadmap
 
-### ✅ Version 3
-- TV show support (season + episode)
-- `/repair` command for malformed entries
-- Multi-entry support in `currently-watching`
-- Polished embedded UI and command layout
+### ✅ Current Goals
+- Fully themed rich embeds
+- Synced channel display updates
+- Suvie AI single-response fix
 
-### ⏭️ Version 4
-- 🔎 Comprehensive fuzzy matching
-- ⚙️ CI/CD with GitHub Actions
-- 🌐 GUI frontend hosted at `suvie.me`
-- 🌍 Public open-source & deployable version
-
----
-
-## 🧾 .gitignore
-
-```gitignore
-# Python
-__pycache__/
-*.py[cod]
-
-# Environments
-suvie-env/
-.env
-
-# macOS
-.DS_Store
-
-# Backups & Data
-backups/json/
-*.zip
-*.log
-movies.json
-
-# IDEs
-.vscode/
-.idea/
-*.sublime-*
-
-# Media / future
-*.db
-*.mp4
-*.mkv
-```
+### ⏭️ Next Steps
+- 🔎 Fuzzy matching for all commands
+- 🌍 Public launch + frontend at `suvie.me`
+- 🧪 CI/CD + test coverage
+- 💸 Monetization prep for freemium open-source
 
 ---
 
-## 🖤 Made with love, hot pink, and precision.
+## 🖤 Made with hot pink, care, and caffeine.
+
+> Designed & built by [penace.org](https://penace.org) • [suvie.me](https://suvie.me)
+
+---
+
+> For updates, issues, and deployment notes, see [docs/commands.md](docs/commands.md)
