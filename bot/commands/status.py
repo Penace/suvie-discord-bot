@@ -68,6 +68,21 @@ class StatusCog(commands.GroupCog, name="status"):  # 👈 Make it a GroupCog
         )
         embed.set_footer(text=f"Uptime: {self.get_uptime()}")
         await interaction.followup.send(embed=embed, ephemeral=True)
+        
+        @app_commands.command(name="sync", description="Manually sync slash commands to the server.")
+        @app_commands.checks.has_permissions(administrator=True)
+        async def sync(self, interaction: discord.Interaction):
+            await interaction.response.defer(ephemeral=True)
+            try:
+                synced = await self.bot.tree.sync(guild=interaction.guild)
+                await interaction.followup.send(
+                    f"🔁 Synced `{len(synced)}` commands to **{interaction.guild.name}**.",
+                    ephemeral=True
+                )
+                print(f"🔁 Synced {len(synced)} commands in {interaction.guild.name} ({interaction.guild_id})")
+            except Exception as e:
+                print(f"❌ Error during /sync: {e}")
+                await interaction.followup.send("❌ Failed to sync commands.", ephemeral=True)
 
     @tasks.loop(minutes=12)
     async def update_status_channel(self):

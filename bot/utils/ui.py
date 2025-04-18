@@ -20,7 +20,7 @@ CHANNEL_THEMES = {
         "prefix": "✅ Watched: "
     },
     "default": {
-        "color": discord.Color.blue(),
+        "color": discord.Color.blurple(),
         "prefix": ""
     }
 }
