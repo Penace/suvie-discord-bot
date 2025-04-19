@@ -1,0 +1,27 @@
+# Environment
+.env
+*.env
+
+# IDE/editor settings
+.vscode/
+.idea/
+.vscode
+
+# System
+.DS_Store
+
+# Backup & temporary files
+backups/
+*.zip
+movies.json
+movies_*.json
+*.json
+!bot/utils/*.json
+bot_backy/
+
+# Python
+*.pyc
+__pycache__/
+
+# Node
+node_modules/
