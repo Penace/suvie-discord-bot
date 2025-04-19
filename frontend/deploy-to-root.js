@@ -22,6 +22,19 @@ async function run() {
         await fs.copy(path.join(ROOT, file), path.join(TEMP, file));
       }
     }
+    console.log("🔍 Checking for uncommitted changes...");
+    const status = execSync("git status --porcelain").toString().trim();
+
+    if (status) {
+      console.log(
+        "🛑 Uncommitted changes detected. Committing before deploy..."
+      );
+
+      execSync("git add .", { stdio: "inherit" });
+      execSync('git commit -m "🚧 Pre-deploy auto commit"', {
+        stdio: "inherit",
+      });
+    }
 
     console.log("🔀 Switching to gh-pages...");
     execSync("git checkout gh-pages", { stdio: "inherit" });

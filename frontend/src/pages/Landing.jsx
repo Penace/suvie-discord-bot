@@ -16,14 +16,55 @@ export default function LandingPage() {
         <p className="mt-2 text-zinc-600 dark:text-zinc-400">
           Your cozy AI movie companion 🎬
         </p>
-        <a
-          href="https://discord.com/oauth2/authorize?client_id=1360281760016892066&scope=bot+applications.commands"
-          target="_blank"
-          rel="noopener noreferrer"
-          className="inline-flex items-center mt-6 px-6 py-3 bg-pink-500 hover:bg-pink-600 text-white text-lg font-medium rounded-full transition shadow-lg"
-        >
-          Invite to Discord <RocketIcon className="ml-2 h-5 w-5" />
-        </a>
+
+        <div className="flex flex-wrap justify-center gap-4 mt-6">
+          <a
+            href="https://discord.com/oauth2/authorize?client_id=1360281760016892066&scope=bot+applications.commands"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="inline-flex items-center px-6 py-3 bg-pink-500 hover:bg-pink-600 text-white text-lg font-medium rounded-full transition shadow-lg"
+          >
+            Invite to Discord <RocketIcon className="ml-2 h-5 w-5" />
+          </a>
+
+          <a
+            href="https://github.com/yourname/suvie-bot"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="inline-flex items-center px-5 py-2.5 bg-zinc-800 hover:bg-zinc-700 text-white text-sm font-semibold rounded-full transition shadow-md"
+          >
+            View on GitHub
+          </a>
+
+          <a
+            href="https://suvie.me/docs"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="inline-flex items-center px-5 py-2.5 bg-zinc-800 hover:bg-zinc-700 text-white text-sm font-semibold rounded-full transition shadow-md"
+          >
+            Read Docs
+          </a>
+        </div>
+
+        <div className="flex flex-wrap justify-center gap-4 mt-4">
+          <a
+            href="https://ko-fi.com/penace"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="inline-flex items-center px-5 py-2.5 text-sm font-semibold text-white bg-[#ff2d84] hover:bg-pink-600 rounded-full transition shadow-md"
+          >
+            Support on Ko-fi 💖
+          </a>
+
+          <a
+            href="https://buymeacoffee.com/penace"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="inline-flex items-center px-5 py-2.5 text-sm font-semibold text-black bg-[#FFDD00] hover:brightness-105 rounded-full transition shadow-md"
+          >
+            Buy Me a Coffee ☕
+          </a>
+        </div>
       </header>
 
       <main className="w-full max-w-3xl space-y-8">
@@ -64,7 +105,24 @@ export default function LandingPage() {
       </main>
 
       <footer className="w-full max-w-4xl mt-16 text-center text-sm text-zinc-500 dark:text-zinc-400">
-        © 2025 suvie by Penace. Built with ❤️
+        © 2025 suvie by{" "}
+        <a href="https://penace.org" className="underline">
+          Penace
+        </a>{" "}
+        •
+        <a
+          href="https://github.com/yourname/suvie-bot"
+          className="underline ml-1"
+        >
+          GitHub
+        </a>{" "}
+        •
+        <a
+          href="https://ko-fi.com/penace"
+          className="underline ml-1 text-pink-500"
+        >
+          Ko-fi
+        </a>
       </footer>
     </div>
   );
