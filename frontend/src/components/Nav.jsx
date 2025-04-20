@@ -25,8 +25,8 @@ export default function Nav() {
     }`;
 
   return (
-    <nav className="w-full max-w-6xl mx-auto px-4 py-3 mb-6 bg-white/60 dark:bg-zinc-900/50 backdrop-blur-md rounded-2xl shadow-md flex flex-wrap items-center justify-between relative z-40">
-      {/* Left Side Logo */}
+    <nav className="w-full max-w-6xl mx-auto px-4 py-3 mb-6 bg-white/60 dark:bg-zinc-800/90 backdrop-blur-md rounded-2xl shadow-md flex flex-wrap items-center justify-between relative z-40">
+      {/* Logo */}
       <div className="text-lg font-bold text-zinc-900 dark:text-white">
         <a href="/" className="flex items-center gap-2">
           suvie
@@ -61,16 +61,11 @@ export default function Nav() {
         </Link>
       </div>
 
-      {/* Right side: Theme + Hamburger */}
-      <div className="flex items-center gap-2 md:gap-3">
-        {/* Always Visible Theme Toggle */}
-        <div className="flex items-center justify-center rounded-full transition bg-zinc-200 dark:bg-pink-600 text-black dark:text-white p-1 h-10">
-          <ThemeToggle />
-        </div>
-
-        {/* Mobile Hamburger */}
+      {/* Right side: Theme toggle + Mobile menu */}
+      <div className="flex items-center gap-2">
+        <ThemeToggle />
         <button
-          className="md:hidden p-2 rounded-lg hover:bg-zinc-100 dark:hover:bg-zinc-800 transition"
+          className="md:hidden p-2 rounded-lg hover:bg-zinc-100 dark:hover:bg-zinc-700 transition"
           onClick={() => setIsOpen(!isOpen)}
         >
           {isOpen ? (
@@ -81,9 +76,9 @@ export default function Nav() {
         </button>
       </div>
 
-      {/* Mobile Dropdown */}
+      {/* Mobile Nav */}
       {isOpen && (
-        <div className="absolute top-full left-4 right-4 mt-2 flex flex-col gap-2 bg-white dark:bg-zinc-900 shadow-xl rounded-2xl p-4 z-50 md:hidden">
+        <div className="absolute top-full left-4 right-4 mt-3 flex flex-col gap-2 bg-white dark:bg-zinc-900 shadow-xl rounded-2xl p-4 z-50 md:hidden">
           <Link
             to="/"
             className={navItemClass("/")}

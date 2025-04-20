@@ -8,7 +8,6 @@ export default function ThemeToggle() {
     const systemDark = window.matchMedia(
       "(prefers-color-scheme: dark)"
     ).matches;
-
     const activeDark = saved === "dark" || (!saved && systemDark);
     document.documentElement.classList.toggle("dark", activeDark);
     setIsDark(activeDark);
@@ -22,20 +21,16 @@ export default function ThemeToggle() {
   };
 
   return (
-    <div
-      className="fixed bottom-5 right-5 z-50"
-      aria-label="Toggle dark mode"
+    <button
       onClick={toggleTheme}
+      className="w-12 h-6 flex items-center rounded-full bg-zinc-300 dark:bg-pink-600 p-1 transition-colors duration-300"
+      aria-label="Toggle dark mode"
     >
       <div
-        className={`w-12 h-6 flex items-center bg-zinc-300 dark:bg-zinc-700 rounded-full p-1 cursor-pointer transition`}
-      >
-        <div
-          className={`bg-white dark:bg-black w-4 h-4 rounded-full shadow transform transition-transform duration-300 ${
-            isDark ? "translate-x-6" : "translate-x-0"
-          }`}
-        />
-      </div>
-    </div>
+        className={`w-4 h-4 rounded-full bg-white dark:bg-black shadow transform transition-transform duration-300 ${
+          isDark ? "translate-x-6" : ""
+        }`}
+      />
+    </button>
   );
 }
