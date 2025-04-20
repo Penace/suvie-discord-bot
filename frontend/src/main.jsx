@@ -14,8 +14,8 @@ createRoot(document.getElementById("root")).render(
       <Routes>
         <Route path="/" element={<LandingPage />} />
         <Route path="/docs" element={<DocsPage />} />
-        <Route path="/support" element={<SupportPage />} />
-        <Route path="/roadmap" element={<RoadmapPage />} />
+        {/* <Route path="/support" element={<SupportPage />} />
+        <Route path="/roadmap" element={<RoadmapPage />} /> */}
       </Routes>
 
       <Footer />
