@@ -18,30 +18,9 @@ createRoot(document.getElementById("root")).render(
         <Route path="/" element={<LandingPage />} />
 
         {/* All other pages go inside layout */}
-        <Route
-          path="/docs"
-          element={
-            <Layout>
-              <DocsPage />
-            </Layout>
-          }
-        />
-        <Route
-          path="/support"
-          element={
-            <Layout>
-              <SupportPage />
-            </Layout>
-          }
-        />
-        <Route
-          path="/roadmap"
-          element={
-            <Layout>
-              <RoadmapPage />
-            </Layout>
-          }
-        />
+        <Route path="/docs" element={<DocsPage />} />
+        <Route path="/support" element={<SupportPage />} />
+        <Route path="/roadmap" element={<RoadmapPage />} />
       </Routes>
     </HashRouter>
   </StrictMode>
