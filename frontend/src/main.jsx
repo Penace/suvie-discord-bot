@@ -1,16 +1,16 @@
 import { StrictMode } from "react";
 import { createRoot } from "react-dom/client";
-import { HashRouter as Router, Routes, Route } from "react-router-dom";
+import { HashRouter, Routes, Route } from "react-router-dom";
 
 import LandingPage from "./LandingPage.jsx";
-import DocsPage from "./DocsPage.jsx"; // ⬅️ New component for /docs
+import DocsPage from "./DocsPage.jsx";
 import KoFiWidget from "./components/KoFiWidget.jsx";
 import ThemeToggle from "./components/ThemeToggle.jsx";
 import "./index.css";
 
 createRoot(document.getElementById("root")).render(
   <StrictMode>
-    <Router>
+    <HashRouter>
       <Routes>
         <Route path="/" element={<LandingPage />} />
         <Route path="/docs" element={<DocsPage />} />
@@ -18,6 +18,6 @@ createRoot(document.getElementById("root")).render(
 
       <KoFiWidget />
       <ThemeToggle />
-    </Router>
+    </HashRouter>
   </StrictMode>
 );
