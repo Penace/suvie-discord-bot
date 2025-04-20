@@ -18,22 +18,22 @@ export default function Nav() {
   const [isOpen, setIsOpen] = useState(false);
   const [isMobile, setIsMobile] = useState(false);
 
-  useEffect(() => {
-    const handleResize = () => setIsMobile(window.innerWidth < 700);
-    window.addEventListener("resize", handleResize);
-    handleResize();
-    return () => window.removeEventListener("resize", handleResize);
-  }, []);
-
   const navItemClass = (path) =>
-    `flex items-center gap-2 px-4 py-2 rounded-full text-sm font-medium transition whitespace-nowrap ${
+    `flex items-center gap-2 px-4 py-2 rounded-full text-sm font-medium transition ${
       location.pathname === path
         ? "bg-zinc-800 text-white dark:bg-zinc-200 dark:text-black"
         : "text-zinc-600 dark:text-zinc-300 hover:bg-zinc-100 dark:hover:bg-zinc-800"
     }`;
 
+  useEffect(() => {
+    const handleResize = () => setIsMobile(window.innerWidth < 1050);
+    handleResize();
+    window.addEventListener("resize", handleResize);
+    return () => window.removeEventListener("resize", handleResize);
+  }, []);
+
   return (
-    <nav className="w-full max-w-6xl mx-auto px-4 py-3 mb-6 bg-white/60 dark:bg-zinc-900/50 backdrop-blur-md rounded-2xl shadow-md flex flex-wrap items-center justify-between relative z-40">
+    <nav className="w-full max-w-6xl mx-auto px-4 py-3 mb-6 bg-white/60 dark:bg-zinc-900/40 backdrop-blur-md rounded-2xl shadow-md flex flex-wrap items-center justify-between relative z-40">
       {/* Left Side Logo */}
       <div className="text-lg font-bold text-zinc-900 dark:text-white">
         <a href="/" className="flex items-center gap-2">
@@ -41,42 +41,47 @@ export default function Nav() {
         </a>
       </div>
 
-      {/* Center Nav (Desktop) */}
+      {/* Desktop Nav */}
       {!isMobile && (
         <div className="flex flex-wrap items-center gap-2">
           <Link to="/" className={navItemClass("/")}>
             <FaHome /> Home
           </Link>
           <Link to="/docs" className={navItemClass("/docs")}>
-            <FaBook /> Docs
+            {" "}
+            <FaBook /> Docs{" "}
           </Link>
           <Link to="/support" className={navItemClass("/support")}>
-            <FaHeart /> Support
+            {" "}
+            <FaHeart /> Support{" "}
           </Link>
           <Link to="/roadmap" className={navItemClass("/roadmap")}>
-            <FaRoad /> Roadmap
+            {" "}
+            <FaRoad /> Roadmap{" "}
           </Link>
           <Link to="/features" className={navItemClass("/features")}>
-            <FaStar /> Features
+            {" "}
+            <FaStar /> Features{" "}
           </Link>
           <Link to="/faq" className={navItemClass("/faq")}>
-            <FaQuestionCircle /> FAQ
+            {" "}
+            <FaQuestionCircle /> FAQ{" "}
           </Link>
           <Link to="/about" className={navItemClass("/about")}>
-            <FaUserAlt /> About
+            {" "}
+            <FaUserAlt /> About{" "}
           </Link>
           <Link to="/privacy" className={navItemClass("/privacy")}>
-            <FaShieldAlt /> Privacy
+            {" "}
+            <FaShieldAlt /> Privacy{" "}
           </Link>
         </div>
       )}
 
-      {/* Right Side: Toggle & Dropdown */}
-      <div className="ml-auto flex items-center gap-2">
-        <div className="h-full flex items-center">
-          <div className="rounded-full transition bg-zinc-200 dark:bg-pink-500 text-black dark:text-white">
-            <ThemeToggle />
-          </div>
+      {/* Right side: Theme + Hamburger */}
+      <div className="flex items-center gap-2 ml-auto">
+        <div className="rounded-full transition bg-zinc-200 dark:bg-pink-500 text-black dark:text-white">
+          <ThemeToggle />
         </div>
         {isMobile && (
           <button
