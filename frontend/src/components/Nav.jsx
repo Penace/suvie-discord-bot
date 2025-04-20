@@ -25,16 +25,16 @@ export default function Nav() {
     }`;
 
   return (
-    <nav className="w-full max-w-6xl mx-auto px-4 py-3 mb-6 bg-white/60 dark:bg-zinc-900/50 backdrop-blur-md rounded-2xl shadow-md flex items-center justify-between flex-wrap relative z-30">
-      {/* Logo */}
+    <nav className="w-full max-w-6xl mx-auto px-4 py-3 mb-6 bg-white/60 dark:bg-zinc-900/50 backdrop-blur-md rounded-2xl shadow-md flex flex-wrap items-center justify-between relative z-40">
+      {/* Left Side Logo */}
       <div className="text-lg font-bold text-zinc-900 dark:text-white">
         <a href="/" className="flex items-center gap-2">
           suvie
         </a>
       </div>
 
-      {/* Desktop Navigation */}
-      <div className="hidden md:flex flex-wrap gap-2 items-center">
+      {/* Desktop Nav */}
+      <div className="hidden md:flex flex-wrap items-center gap-2">
         <Link to="/" className={navItemClass("/")}>
           <FaHome /> Home
         </Link>
@@ -61,15 +61,17 @@ export default function Nav() {
         </Link>
       </div>
 
-      {/* Right-side: Theme toggle + mobile menu */}
-      <div className="flex items-center gap-2">
-        <div className="rounded-full bg-zinc-200 dark:bg-pink-500 text-black dark:text-white">
+      {/* Right side: Theme + Hamburger */}
+      <div className="flex items-center gap-2 md:gap-3">
+        {/* Always Visible Theme Toggle */}
+        <div className="flex items-center justify-center rounded-full transition bg-zinc-200 dark:bg-pink-600 text-black dark:text-white p-1 h-10">
           <ThemeToggle />
         </div>
+
+        {/* Mobile Hamburger */}
         <button
           className="md:hidden p-2 rounded-lg hover:bg-zinc-100 dark:hover:bg-zinc-800 transition"
           onClick={() => setIsOpen(!isOpen)}
-          aria-label="Toggle menu"
         >
           {isOpen ? (
             <XIcon className="w-5 h-5" />
@@ -81,26 +83,63 @@ export default function Nav() {
 
       {/* Mobile Dropdown */}
       {isOpen && (
-        <div className="absolute top-full left-0 right-0 mt-2 flex flex-col gap-2 bg-white dark:bg-zinc-900 shadow-xl rounded-2xl p-4 md:hidden z-20">
-          {[
-            ["/", <FaHome />, "Home"],
-            ["/docs", <FaBook />, "Docs"],
-            ["/support", <FaHeart />, "Support"],
-            ["/roadmap", <FaRoad />, "Roadmap"],
-            ["/features", <FaStar />, "Features"],
-            ["/faq", <FaQuestionCircle />, "FAQ"],
-            ["/about", <FaUserAlt />, "About"],
-            ["/privacy", <FaShieldAlt />, "Privacy"],
-          ].map(([path, icon, label]) => (
-            <Link
-              key={path}
-              to={path}
-              className={navItemClass(path)}
-              onClick={() => setIsOpen(false)}
-            >
-              {icon} {label}
-            </Link>
-          ))}
+        <div className="absolute top-full left-4 right-4 mt-2 flex flex-col gap-2 bg-white dark:bg-zinc-900 shadow-xl rounded-2xl p-4 z-50 md:hidden">
+          <Link
+            to="/"
+            className={navItemClass("/")}
+            onClick={() => setIsOpen(false)}
+          >
+            <FaHome /> Home
+          </Link>
+          <Link
+            to="/docs"
+            className={navItemClass("/docs")}
+            onClick={() => setIsOpen(false)}
+          >
+            <FaBook /> Docs
+          </Link>
+          <Link
+            to="/support"
+            className={navItemClass("/support")}
+            onClick={() => setIsOpen(false)}
+          >
+            <FaHeart /> Support
+          </Link>
+          <Link
+            to="/roadmap"
+            className={navItemClass("/roadmap")}
+            onClick={() => setIsOpen(false)}
+          >
+            <FaRoad /> Roadmap
+          </Link>
+          <Link
+            to="/features"
+            className={navItemClass("/features")}
+            onClick={() => setIsOpen(false)}
+          >
+            <FaStar /> Features
+          </Link>
+          <Link
+            to="/faq"
+            className={navItemClass("/faq")}
+            onClick={() => setIsOpen(false)}
+          >
+            <FaQuestionCircle /> FAQ
+          </Link>
+          <Link
+            to="/about"
+            className={navItemClass("/about")}
+            onClick={() => setIsOpen(false)}
+          >
+            <FaUserAlt /> About
+          </Link>
+          <Link
+            to="/privacy"
+            className={navItemClass("/privacy")}
+            onClick={() => setIsOpen(false)}
+          >
+            <FaShieldAlt /> Privacy
+          </Link>
         </div>
       )}
     </nav>
