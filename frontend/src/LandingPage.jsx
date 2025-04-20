@@ -10,6 +10,7 @@ import {
 import { FaDiscord, FaCoffee, FaHeart, FaGithub } from "react-icons/fa";
 import Footer from "./components/Footer.jsx";
 import KoFiWidget from "./components/KoFiWidget.jsx";
+import ThemeToggle from "./components/ThemeToggle.jsx";
 
 export default function LandingPage() {
   return (
@@ -123,6 +124,7 @@ export default function LandingPage() {
 
       <Footer />
       <KoFiWidget />
+      <ThemeToggle />
     </div>
   );
 }
