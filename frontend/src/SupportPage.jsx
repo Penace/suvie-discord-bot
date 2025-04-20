@@ -1,4 +1,6 @@
 import Footer from "./components/Footer.jsx";
+import KoFiWidget from "./components/KoFiWidget.jsx";
+import ThemeToggle from "./components/ThemeToggle.jsx";
 
 export default function SupportPage() {
   return (
@@ -33,6 +35,8 @@ export default function SupportPage() {
         </p>
       </div>
       <Footer />
+      <KoFiWidget />
+      <ThemeToggle />
     </div>
   );
 }

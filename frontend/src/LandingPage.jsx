@@ -44,14 +44,14 @@ export default function LandingPage() {
           </a>
 
           <a
-            href="/docs"
+            href="/#/docs"
             className="inline-flex items-center px-5 py-2.5 bg-zinc-800 hover:bg-zinc-700 text-white text-sm font-semibold rounded-full shadow-md hover:shadow-lg transition-all duration-200"
           >
             Read Docs
           </a>
 
           <a
-            href="/support"
+            href="/#/support"
             className="inline-flex items-center px-4 py-2 bg-pink-500 hover:bg-pink-600 text-white text-sm font-semibold rounded-full shadow-md hover:shadow-lg transition-all duration-200"
           >
             <FaHeart className="w-5 h-5 mr-2" />
@@ -59,7 +59,7 @@ export default function LandingPage() {
           </a>
 
           <a
-            href="/roadmap"
+            href="/#/roadmap"
             className="inline-flex items-center px-4 py-2 bg-yellow-400 hover:bg-yellow-500 text-white text-sm font-semibold rounded-full shadow-md hover:shadow-lg transition-all duration-200"
           >
             <FaCoffee className="w-5 h-5 mr-2" />
