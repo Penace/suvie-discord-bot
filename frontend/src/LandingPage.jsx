@@ -9,6 +9,7 @@ import { FaDiscord, FaCoffee, FaHeart, FaGithub } from "react-icons/fa";
 import Footer from "./components/Footer.jsx";
 import KoFiWidget from "./components/KoFiWidget.jsx";
 import ThemeToggle from "./components/ThemeToggle.jsx";
+import Nav from "./components/Nav.jsx";
 
 export default function LandingPage() {
   return (
@@ -67,7 +68,7 @@ export default function LandingPage() {
           </a>
         </div>
       </header>
-
+      <Nav />
       {/* Main */}
       <main className="w-full max-w-4xl space-y-10">
         <section className="text-center">
