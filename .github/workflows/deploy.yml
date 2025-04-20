@@ -31,6 +31,9 @@ jobs:
       - name: 🛠️ Build Frontend
         run: pnpm run build
 
+      - name: 📄 Copy README to dist
+        run: cp README.md dist/README.md
+
       - name: 📦 Deploy to GitHub Pages
         uses: peaceiris/actions-gh-pages@v3
         with:
