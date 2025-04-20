@@ -33,10 +33,14 @@ export default function Nav() {
   }, []);
 
   return (
-    <nav className="w-full max-w-6xl mx-auto px-4 py-3 mb-6 bg-white/70 dark:bg-zinc-800/60 backdrop-blur-md rounded-2xl shadow-md flex flex-wrap items-center justify-between relative z-40">
+    <nav className="w-full max-w-6xl mx-auto px-4 py-3 mb-6 bg-gradient-to-r from-white/80 to-zinc-100/80 dark:from-zinc-800/70 dark:to-zinc-900/70 backdrop-blur-md rounded-2xl shadow-md flex flex-wrap items-center justify-between relative z-40">
+      <div className="absolute right-0 top-1/2 -translate-y-1/2 h-4 w-4 rounded-full bg-pink-500 shadow-md md:block hidden"></div>
       {/* Left Side Logo */}
-      <div className="text-lg font-bold text-zinc-900 dark:text-white">
-        <a href="/" className="flex items-center gap-2">
+      <div className="relative z-50 bg-white dark:bg-zinc-900 px-4 py-1 rounded-xl shadow-md">
+        <a
+          href="/"
+          className="flex items-center gap-2 text-lg font-bold text-zinc-900 dark:text-white"
+        >
           suvie
         </a>
       </div>
