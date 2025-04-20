@@ -1,4 +1,6 @@
 import Footer from "./components/Footer.jsx";
+import KoFiWidget from "./components/KoFiWidget.jsx";
+import ThemeToggle from "./components/ThemeToggle.jsx";
 
 export default function RoadmapPage() {
   return (
@@ -21,6 +23,8 @@ export default function RoadmapPage() {
         </ul>
       </div>
       <Footer />
+      <KoFiWidget />
+      <ThemeToggle />
     </div>
   );
 }
