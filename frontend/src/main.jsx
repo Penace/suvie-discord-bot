@@ -1,9 +1,10 @@
 import { StrictMode } from "react";
 import { createRoot } from "react-dom/client";
 import { HashRouter, Routes, Route } from "react-router-dom";
-import Footer from "./components/Footer.jsx";
 import LandingPage from "./LandingPage.jsx";
 import DocsPage from "./DocsPage.jsx";
+
+import Footer from "./components/Footer.jsx";
 import KoFiWidget from "./components/KoFiWidget.jsx";
 import ThemeToggle from "./components/ThemeToggle.jsx";
 import "./index.css";
@@ -18,9 +19,9 @@ createRoot(document.getElementById("root")).render(
         <Route path="/roadmap" element={<RoadmapPage />} /> */}
       </Routes>
 
-      <Footer />
+      {/* <Footer />
       <KoFiWidget />
-      <ThemeToggle />
+      <ThemeToggle /> */}
     </HashRouter>
   </StrictMode>
 );
