@@ -18,7 +18,7 @@ export default function DocsPage() {
         <nav className="mb-12 text-sm">
           <Link to="/" className="text-blue-500 hover:underline">
             ← Back to Home
-          </Link>
+          </Link>{" "}
           |{" "}
           <a
             href="https://github.com/Penace/suvie-discord-bot/blob/main/docs/COMMANDS.md"

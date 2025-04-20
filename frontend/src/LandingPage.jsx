@@ -1,5 +1,12 @@
 import React from "react";
-import { MessageCircleIcon, HeartIcon, TerminalIcon } from "lucide-react";
+import {
+  MessageCircleIcon,
+  HeartIcon,
+  TerminalIcon,
+  BrainIcon,
+  EyeIcon,
+  TagIcon,
+} from "lucide-react";
 import { FaDiscord, FaCoffee, FaHeart, FaGithub } from "react-icons/fa";
 import Footer from "./components/Footer.jsx";
 import KoFiWidget from "./components/KoFiWidget.jsx";
@@ -61,8 +68,9 @@ export default function LandingPage() {
           </a>
         </div>
       </header>
+
       {/* Main */}
-      <main className="w-full max-w-4xl space-y-10">
+      <main className="w-full max-w-5xl space-y-10 animate-fade-in">
         <section className="text-center">
           <h2 className="text-2xl font-bold mb-3">
             Meet suvie — Your Cozy AI Movie Companion 🍿
@@ -74,32 +82,57 @@ export default function LandingPage() {
         </section>
 
         <section className="grid grid-cols-1 md:grid-cols-3 gap-6 text-center">
-          <div className="p-4 bg-white/60 dark:bg-zinc-800/70 rounded-xl shadow hover:shadow-xl transition-all duration-300 border">
-            <TerminalIcon className="mx-auto mb-3 h-6 w-6 text-pink-500" />
-            <h3 className="font-semibold text-lg">Quick Commands</h3>
-            <p className="text-sm mt-2 text-zinc-600 dark:text-zinc-300">
-              Add, update, and track movies and shows with a single slash
-              command.
-            </p>
-          </div>
-          <div className="p-4 bg-white/60 dark:bg-zinc-800/70 rounded-xl shadow hover:shadow-xl transition-all duration-300 border">
-            <MessageCircleIcon className="mx-auto mb-3 h-6 w-6 text-pink-500" />
-            <h3 className="font-semibold text-lg">Smart Chat</h3>
-            <p className="text-sm mt-2 text-zinc-600 dark:text-zinc-300">
-              Talk to suvie like a friend — get recommendations and more.
-            </p>
-          </div>
-          <div className="p-4 bg-white/60 dark:bg-zinc-800/70 rounded-xl shadow hover:shadow-xl transition-all duration-300 border">
-            <HeartIcon className="mx-auto mb-3 h-6 w-6 text-pink-500" />
-            <h3 className="font-semibold text-lg">Personalized</h3>
-            <p className="text-sm mt-2 text-zinc-600 dark:text-zinc-300">
-              Keeps track of your current watchlist and what's next.
-            </p>
-          </div>
+          <FeatureBox
+            icon={
+              <TerminalIcon className="h-6 w-6 text-pink-500 mx-auto mb-3" />
+            }
+            title="Quick Commands"
+            desc="Add, update, and track movies and shows with a single slash command."
+          />
+          <FeatureBox
+            icon={
+              <MessageCircleIcon className="h-6 w-6 text-pink-500 mx-auto mb-3" />
+            }
+            title="Smart Chat"
+            desc="Talk to suvie like a friend — get recommendations and more."
+          />
+          <FeatureBox
+            icon={<HeartIcon className="h-6 w-6 text-pink-500 mx-auto mb-3" />}
+            title="Personalized"
+            desc="Keeps track of your current watchlist and what's next."
+          />
+          <FeatureBox
+            icon={
+              <BrainIcon className="h-6 w-6 text-indigo-500 mx-auto mb-3" />
+            }
+            title="Learns You"
+            desc="Suvie adapts over time to better match your movie tastes."
+          />
+          <FeatureBox
+            icon={<EyeIcon className="h-6 w-6 text-green-500 mx-auto mb-3" />}
+            title="Cross-Server Sync"
+            desc="Your watchlist follows you across all servers seamlessly."
+          />
+          <FeatureBox
+            icon={<TagIcon className="h-6 w-6 text-yellow-500 mx-auto mb-3" />}
+            title="Custom Tags"
+            desc="Add personal tags to organize your movies your way."
+          />
         </section>
       </main>
+
       <Footer />
       <KoFiWidget />
+    </div>
+  );
+}
+
+function FeatureBox({ icon, title, desc }) {
+  return (
+    <div className="p-4 bg-white/60 dark:bg-zinc-800/70 rounded-xl shadow hover:shadow-xl transition-all duration-300 border backdrop-blur-md">
+      {icon}
+      <h3 className="font-semibold text-lg">{title}</h3>
+      <p className="text-sm mt-2 text-zinc-600 dark:text-zinc-300">{desc}</p>
     </div>
   );
 }
