@@ -35,20 +35,16 @@ export default function Nav() {
   return (
     <nav className="w-full max-w-6xl mx-auto mb-6 relative z-40">
       <div className="flex rounded-2xl shadow-md overflow-hidden">
-        {/* Logo Block with Pink Accent */}
-        <div className="relative bg-white dark:bg-zinc-900 px-6 py-3 flex items-center z-10">
-          <div className="absolute left-0 top-0 h-full w-1 bg-pink-500" />
-          <a
-            href="/"
-            className="text-lg font-bold text-zinc-900 dark:text-white"
-          >
+        {/* Pink Logo Block with Shadow Divider */}
+        <div className="relative bg-pink-500 px-6 py-3 flex items-center z-10 shadow-md shadow-pink-300">
+          <a href="/" className="text-lg font-bold text-white">
             suvie
           </a>
         </div>
 
-        {/* Nav Content */}
+        {/* Nav Bar Content */}
         <div className="flex-grow px-4 py-3 flex flex-wrap items-center justify-between bg-gradient-to-r from-white/80 to-zinc-100/80 dark:from-zinc-800/70 dark:to-zinc-900/70 backdrop-blur-md">
-          {/* Nav Links (Desktop) */}
+          {/* Desktop Nav Links */}
           {!isMobile && (
             <div className="flex flex-wrap items-center gap-2">
               <Link to="/" className={navItemClass("/")}>
@@ -78,9 +74,9 @@ export default function Nav() {
             </div>
           )}
 
-          {/* Theme + Hamburger */}
+          {/* Theme Toggle and Menu */}
           <div className="flex items-center gap-2 ml-auto">
-            <div className="rounded-full transition bg-zinc-200 dark:bg-pink-500 text-black dark:text-white">
+            <div className="rounded-full transition bg-zinc-200 dark:bg-pink-600 text-black dark:text-white">
               <ThemeToggle />
             </div>
             {isMobile && (
