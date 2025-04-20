@@ -6,7 +6,7 @@ export default defineConfig({
   build: {
     outDir: "dist",
   },
-  base: "/", // Required for GitHub Pages
+  base: "./", // Required for GitHub Pages
   server: {
     historyApiFallback: true,
   },

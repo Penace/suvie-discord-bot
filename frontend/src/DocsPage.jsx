@@ -1,8 +1,5 @@
 import React from "react";
 import { Link } from "react-router-dom";
-import Footer from "./components/Footer.jsx";
-import KoFiWidget from "./components/KoFiWidget.jsx";
-import ThemeToggle from "./components/ThemeToggle.jsx";
 
 export default function DocsPage() {
   return (
@@ -96,9 +93,6 @@ export default function DocsPage() {
           </p>
         </section>
       </div>
-      <Footer />
-      <KoFiWidget />
-      <ThemeToggle />
     </div>
   );
 }
