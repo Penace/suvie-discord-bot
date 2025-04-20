@@ -20,14 +20,14 @@ jobs:
           node-version: "20"
 
       - name: 🔧 Install Dependencies
-        working-directory: ./suvie-bot/frontend
+        working-directory: ./frontend
         run: |
           corepack enable
           corepack prepare pnpm@latest --activate
           pnpm install
 
       - name: 📊 Build Frontend
-        working-directory: ./suvie-bot/frontend
+        working-directory: ./frontend
         run: |
           pnpm run build
 
