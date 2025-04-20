@@ -33,7 +33,7 @@ export default function Nav() {
   }, []);
 
   return (
-    <nav className="w-full max-w-6xl mx-auto px-4 py-3 mb-6 bg-white/60 dark:bg-zinc-900/40 backdrop-blur-md rounded-2xl shadow-md flex flex-wrap items-center justify-between relative z-40">
+    <nav className="w-full max-w-6xl mx-auto px-4 py-3 mb-6 bg-white/70 dark:bg-zinc-800/60 backdrop-blur-md rounded-2xl shadow-md flex flex-wrap items-center justify-between relative z-40">
       {/* Left Side Logo */}
       <div className="text-lg font-bold text-zinc-900 dark:text-white">
         <a href="/" className="flex items-center gap-2">
