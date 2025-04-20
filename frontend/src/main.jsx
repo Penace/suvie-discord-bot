@@ -7,7 +7,6 @@ import DocsPage from "./DocsPage.jsx";
 import SupportPage from "./SupportPage.jsx";
 import RoadmapPage from "./RoadmapPage.jsx";
 
-import Layout from "./components/Layout.jsx"; // reusable wrapper
 import "./index.css";
 
 createRoot(document.getElementById("root")).render(

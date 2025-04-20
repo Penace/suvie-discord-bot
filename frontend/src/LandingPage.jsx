@@ -1,11 +1,8 @@
 import React from "react";
-import {
-  RocketIcon,
-  MessageCircleIcon,
-  HeartIcon,
-  TerminalIcon,
-} from "lucide-react";
+import { MessageCircleIcon, HeartIcon, TerminalIcon } from "lucide-react";
 import { FaDiscord, FaCoffee, FaHeart, FaGithub } from "react-icons/fa";
+import Footer from "./components/Footer.jsx";
+import KoFiWidget from "./components/KoFiWidget.jsx";
 
 export default function LandingPage() {
   return (
@@ -101,6 +98,8 @@ export default function LandingPage() {
           </div>
         </section>
       </main>
+      <Footer />
+      <KoFiWidget />
     </div>
   );
 }
