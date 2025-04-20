@@ -10,6 +10,11 @@ This is the frontend source code for [suvie](https://suvie.me) — your cozy AI 
 > 🚀 Deployed live to [suvie.me](https://suvie.me) via GitHub Pages  
 > 📦 Auto-deploy via GitHub Actions from `/frontend/dist`
 
+- [📖 Full Command List](./COMMANDS.md)
+- [🛣️ Roadmap](./ROADMAP.md)
+- [💖 Support](./SUPPORT.md)
+- [📁 Setup](./SETUP.md)
+
 ---
 
 ## ✨ Features
