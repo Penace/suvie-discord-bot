@@ -1,4 +1,3 @@
-# .github/workflows/deploy.yml
 name: Deploy Frontend to GitHub Pages
 
 on:
@@ -10,31 +9,34 @@ jobs:
   build-and-deploy:
     runs-on: ubuntu-latest
 
+    defaults:
+      run:
+        working-directory: ./frontend
+
     steps:
-      - name: ✨ Checkout Repository
+      - name: 📥 Checkout Repository
         uses: actions/checkout@v4
 
-      - name: ♻ Setup Node.js
+      - name: 🧰 Setup Node.js
         uses: actions/setup-node@v4
         with:
           node-version: "20"
 
-      - name: 🔧 Install Dependencies
-        working-directory: ./frontend
+      - name: 🚀 Enable & Install pnpm
         run: |
           corepack enable
           corepack prepare pnpm@latest --activate
           pnpm install
 
-      - name: 📊 Build Frontend
-        working-directory: ./frontend
-        run: |
-          pnpm run build
+      - name: 🛠️ Build Frontend
+        run: pnpm run build
 
-      - name: 🔧 Deploy to GitHub Pages
+      - name: 📦 Deploy to GitHub Pages
         uses: peaceiris/actions-gh-pages@v3
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
-          publish_dir: /frontend/dist
+          publish_dir: ./frontend/dist
           publish_branch: gh-pages
-          commit_message: "Deploy frontend from GitHub Actions"
+          commit_message: "🚀 Deploy suvie.me frontend"
+          cname: suvie.me
+          enable_jekyll: false
