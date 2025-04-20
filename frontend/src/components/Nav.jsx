@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { Link, useLocation } from "react-router-dom";
 import {
   FaHome,
@@ -16,33 +16,25 @@ import ThemeToggle from "./ThemeToggle";
 export default function Nav() {
   const location = useLocation();
   const [isOpen, setIsOpen] = useState(false);
-  const [isMobile, setIsMobile] = useState(false);
-
-  useEffect(() => {
-    const handleResize = () => setIsMobile(window.innerWidth < 690);
-    handleResize();
-    window.addEventListener("resize", handleResize);
-    return () => window.removeEventListener("resize", handleResize);
-  }, []);
 
   const navItemClass = (path) =>
-    `flex items-center gap-2 px-4 py-2 rounded-full text-sm font-medium transition whitespace-nowrap ${
+    `flex items-center gap-2 px-4 py-2 rounded-full text-sm font-medium transition ${
       location.pathname === path
         ? "bg-zinc-800 text-white dark:bg-zinc-200 dark:text-black"
         : "text-zinc-600 dark:text-zinc-300 hover:bg-zinc-100 dark:hover:bg-zinc-800"
     }`;
 
   return (
-    <nav className="w-full max-w-6xl mx-auto px-4 py-3 mb-6 bg-white/60 dark:bg-zinc-800/70 backdrop-blur-md rounded-2xl shadow-md flex flex-wrap items-center justify-between relative z-40">
-      {/* Logo */}
+    <nav className="w-full max-w-6xl mx-auto px-4 py-3 mb-6 bg-white/60 dark:bg-zinc-900/50 backdrop-blur-md rounded-2xl shadow-md flex flex-wrap items-center justify-between relative z-40">
+      {/* Left Side Logo */}
       <div className="text-lg font-bold text-zinc-900 dark:text-white">
         <a href="/" className="flex items-center gap-2">
           suvie
         </a>
       </div>
 
-      {/* Main Nav (Wraps if needed) */}
-      <div className="flex flex-wrap gap-2 items-center flex-1 justify-center md:justify-start">
+      {/* Desktop Nav */}
+      <div className="hidden md:flex flex-wrap items-center gap-2">
         <Link to="/" className={navItemClass("/")}>
           <FaHome /> Home
         </Link>
@@ -69,13 +61,16 @@ export default function Nav() {
         </Link>
       </div>
 
-      {/* Right controls (always visible) */}
-      <div className="flex items-center gap-2 absolute top-3 right-4">
-        <div className="rounded-full p-1 h-10 flex items-center justify-center bg-zinc-200 dark:bg-pink-600">
+      {/* Right side: Theme + Hamburger */}
+      <div className="flex items-center gap-2 md:gap-3">
+        {/* Always Visible Theme Toggle */}
+        <div className="rounded-full transition bg-zinc-200 dark:bg-pink-500 text-black dark:text-white">
           <ThemeToggle />
         </div>
+
+        {/* Mobile Hamburger */}
         <button
-          className="p-2 rounded-lg hover:bg-zinc-100 dark:hover:bg-zinc-800 transition md:block"
+          className="md:hidden p-2 rounded-lg hover:bg-zinc-100 dark:hover:bg-zinc-800 transition"
           onClick={() => setIsOpen(!isOpen)}
         >
           {isOpen ? (
@@ -86,9 +81,9 @@ export default function Nav() {
         </button>
       </div>
 
-      {/* Dropdown */}
-      {isMobile && isOpen && (
-        <div className="w-full mt-3 flex flex-col gap-2 bg-white dark:bg-zinc-900 shadow-xl rounded-2xl p-4">
+      {/* Mobile Dropdown */}
+      {isOpen && (
+        <div className="absolute top-full left-4 right-4 mt-2 flex flex-col gap-2 bg-white dark:bg-zinc-900 shadow-xl rounded-2xl p-4 z-50 md:hidden">
           <Link
             to="/"
             className={navItemClass("/")}
