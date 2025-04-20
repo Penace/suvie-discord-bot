@@ -33,77 +33,75 @@ export default function Nav() {
   }, []);
 
   return (
-    <nav className="w-full max-w-6xl mx-auto px-4 py-3 mb-6 bg-gradient-to-r from-white/80 to-zinc-100/80 dark:from-zinc-800/70 dark:to-zinc-900/70 backdrop-blur-md rounded-2xl shadow-md flex flex-wrap items-center justify-between relative z-40">
-      <div className="absolute right-0 top-1/2 -translate-y-1/2 h-4 w-4 rounded-full bg-pink-500 shadow-md md:block hidden"></div>
-      {/* Left Side Logo */}
-      <div className="relative z-50 bg-white dark:bg-zinc-900 px-4 py-1 rounded-xl shadow-md">
-        <a
-          href="/"
-          className="flex items-center gap-2 text-lg font-bold text-zinc-900 dark:text-white"
-        >
-          suvie
-        </a>
-      </div>
-
-      {/* Desktop Nav */}
-      {!isMobile && (
-        <div className="flex flex-wrap items-center gap-2">
-          <Link to="/" className={navItemClass("/")}>
-            <FaHome /> Home
-          </Link>
-          <Link to="/docs" className={navItemClass("/docs")}>
-            {" "}
-            <FaBook /> Docs{" "}
-          </Link>
-          <Link to="/support" className={navItemClass("/support")}>
-            {" "}
-            <FaHeart /> Support{" "}
-          </Link>
-          <Link to="/roadmap" className={navItemClass("/roadmap")}>
-            {" "}
-            <FaRoad /> Roadmap{" "}
-          </Link>
-          <Link to="/features" className={navItemClass("/features")}>
-            {" "}
-            <FaStar /> Features{" "}
-          </Link>
-          <Link to="/faq" className={navItemClass("/faq")}>
-            {" "}
-            <FaQuestionCircle /> FAQ{" "}
-          </Link>
-          <Link to="/about" className={navItemClass("/about")}>
-            {" "}
-            <FaUserAlt /> About{" "}
-          </Link>
-          <Link to="/privacy" className={navItemClass("/privacy")}>
-            {" "}
-            <FaShieldAlt /> Privacy{" "}
-          </Link>
-        </div>
-      )}
-
-      {/* Right side: Theme + Hamburger */}
-      <div className="flex items-center gap-2 ml-auto">
-        <div className="rounded-full transition bg-zinc-200 dark:bg-pink-500 text-black dark:text-white">
-          <ThemeToggle />
-        </div>
-        {isMobile && (
-          <button
-            className="p-2 rounded-lg hover:bg-zinc-100 dark:hover:bg-zinc-800 transition"
-            onClick={() => setIsOpen(!isOpen)}
+    <nav className="w-full max-w-6xl mx-auto mb-6 relative z-40">
+      <div className="flex rounded-2xl shadow-md overflow-hidden">
+        {/* Logo Block with Pink Accent */}
+        <div className="relative bg-white dark:bg-zinc-900 px-6 py-3 flex items-center z-10">
+          <div className="absolute left-0 top-0 h-full w-1 bg-pink-500" />
+          <a
+            href="/"
+            className="text-lg font-bold text-zinc-900 dark:text-white"
           >
-            {isOpen ? (
-              <XIcon className="w-5 h-5" />
-            ) : (
-              <MenuIcon className="w-5 h-5" />
+            suvie
+          </a>
+        </div>
+
+        {/* Nav Content */}
+        <div className="flex-grow px-4 py-3 flex flex-wrap items-center justify-between bg-gradient-to-r from-white/80 to-zinc-100/80 dark:from-zinc-800/70 dark:to-zinc-900/70 backdrop-blur-md">
+          {/* Nav Links (Desktop) */}
+          {!isMobile && (
+            <div className="flex flex-wrap items-center gap-2">
+              <Link to="/" className={navItemClass("/")}>
+                <FaHome /> Home
+              </Link>
+              <Link to="/docs" className={navItemClass("/docs")}>
+                <FaBook /> Docs
+              </Link>
+              <Link to="/support" className={navItemClass("/support")}>
+                <FaHeart /> Support
+              </Link>
+              <Link to="/roadmap" className={navItemClass("/roadmap")}>
+                <FaRoad /> Roadmap
+              </Link>
+              <Link to="/features" className={navItemClass("/features")}>
+                <FaStar /> Features
+              </Link>
+              <Link to="/faq" className={navItemClass("/faq")}>
+                <FaQuestionCircle /> FAQ
+              </Link>
+              <Link to="/about" className={navItemClass("/about")}>
+                <FaUserAlt /> About
+              </Link>
+              <Link to="/privacy" className={navItemClass("/privacy")}>
+                <FaShieldAlt /> Privacy
+              </Link>
+            </div>
+          )}
+
+          {/* Theme + Hamburger */}
+          <div className="flex items-center gap-2 ml-auto">
+            <div className="rounded-full transition bg-zinc-200 dark:bg-pink-500 text-black dark:text-white">
+              <ThemeToggle />
+            </div>
+            {isMobile && (
+              <button
+                className="p-2 rounded-lg hover:bg-zinc-100 dark:hover:bg-zinc-800 transition"
+                onClick={() => setIsOpen(!isOpen)}
+              >
+                {isOpen ? (
+                  <XIcon className="w-5 h-5" />
+                ) : (
+                  <MenuIcon className="w-5 h-5" />
+                )}
+              </button>
             )}
-          </button>
-        )}
+          </div>
+        </div>
       </div>
 
       {/* Mobile Dropdown */}
       {isOpen && isMobile && (
-        <div className="absolute top-full left-4 right-4 mt-2 flex flex-col gap-2 bg-white dark:bg-zinc-900 shadow-xl rounded-2xl p-4 z-50">
+        <div className="mt-2 flex flex-col gap-2 bg-white dark:bg-zinc-900 shadow-xl rounded-2xl p-4 z-50">
           <Link
             to="/"
             className={navItemClass("/")}
