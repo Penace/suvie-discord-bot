@@ -29,7 +29,7 @@ export default function Nav() {
     `relative flex items-center gap-2 px-4 py-2 rounded-full text-sm font-medium transition-all duration-300 
     ${
       location.pathname === path
-        ? "bg-zinc-800 text-white dark:bg-zinc-200 dark:text-black shadow-[0_0_0_2px_rgba(255,255,255,0.1)] animate-pulse-slow"
+        ? "bg-zinc-800 text-white dark:bg-zinc-200 dark:text-black shadow-sm animate-pulse-slow"
         : "text-zinc-600 dark:text-zinc-300 hover:text-black dark:hover:text-white"
     }
     before:absolute before:bottom-0 before:left-4 before:right-4 before:h-[2px] before:bg-pink-500 before:scale-x-0 hover:before:scale-x-100 before:transition-transform before:origin-left before:duration-300`;
@@ -37,15 +37,16 @@ export default function Nav() {
   return (
     <nav className="w-full max-w-6xl mx-auto mb-6 relative z-40 animate-fade-in-up">
       <div className="flex rounded-2xl shadow-md overflow-hidden">
-        {/* Logo Block with Gradient + Subtle Animation */}
-        <div className="relative z-50 bg-gradient-to-br from-pink-500 to-pink-400 text-white px-6 py-2 rounded-l-2xl shadow-[4px_0_10px_-2px_rgba(0,0,0,0.15)] transition-all duration-500">
-          <a href="/" className="text-lg font-bold text-white">
+        {/* Logo Section */}
+        <div className="relative z-50 bg-pink-500 text-white px-6 h-full flex items-center rounded-l-2xl transition-all duration-300 transform hover:scale-105">
+          <a href="/" className="text-lg font-bold">
             suvie
           </a>
         </div>
 
-        {/* Main Nav Bar */}
+        {/* Main Nav */}
         <div className="flex-grow px-4 py-3 flex flex-wrap items-center justify-between bg-gradient-to-r from-white/80 to-zinc-100/80 dark:from-zinc-800/70 dark:to-zinc-900/70 backdrop-blur-md">
+          {/* Desktop Nav */}
           {!isMobile && (
             <div className="flex flex-wrap items-center gap-2">
               <Link to="/" className={navItemClass("/")}>
@@ -76,9 +77,9 @@ export default function Nav() {
           )}
 
           {/* Right Utilities */}
-          <div className="flex items-center gap-2 ml-auto">
+          <div className="flex items-center gap-2 ml-auto relative">
             <div className="rounded-full transition bg-zinc-200 dark:bg-pink-600 text-black dark:text-white">
-              <ThemeToggle />
+              <ThemeToggle position="" />
             </div>
 
             {isMobile && (
@@ -99,8 +100,7 @@ export default function Nav() {
 
       {/* Mobile Dropdown */}
       {isOpen && isMobile && (
-        <div className="mt-2 flex flex-col gap-2 bg-white dark:bg-zinc-900 shadow-xl rounded-2xl p-4 z-50 animate-fade-in-up duration-500 ease-out">
-          {" "}
+        <div className="mt-2 flex flex-col gap-2 bg-white dark:bg-zinc-900 shadow-xl rounded-2xl p-4 z-50 animate-fade-in-up">
           {[
             { path: "/", label: "Home", icon: <FaHome /> },
             { path: "/docs", label: "Docs", icon: <FaBook /> },
@@ -110,14 +110,14 @@ export default function Nav() {
             { path: "/faq", label: "FAQ", icon: <FaQuestionCircle /> },
             { path: "/about", label: "About", icon: <FaUserAlt /> },
             { path: "/privacy", label: "Privacy", icon: <FaShieldAlt /> },
-          ].map((item) => (
+          ].map(({ path, label, icon }) => (
             <Link
-              key={item.path}
-              to={item.path}
-              className={navItemClass(item.path)}
+              key={path}
+              to={path}
+              className={navItemClass(path)}
               onClick={() => setIsOpen(false)}
             >
-              {item.icon} {item.label}
+              {icon} {label}
             </Link>
           ))}
         </div>
