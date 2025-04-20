@@ -124,7 +124,7 @@ export default function LandingPage() {
 
       <Footer />
       <KoFiWidget />
-      <ThemeToggle />
+      <ThemeToggle position="bottom-right" />
     </div>
   );
 }

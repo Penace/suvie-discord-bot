@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 
-export default function ThemeToggle() {
+export default function ThemeToggle({ position = "bottom-center" }) {
   const [isDark, setIsDark] = useState(false);
 
   useEffect(() => {
@@ -20,17 +20,26 @@ export default function ThemeToggle() {
     setIsDark(newIsDark);
   };
 
+  const positions = {
+    "bottom-center": "fixed bottom-5 left-1/2 -translate-x-1/2",
+    "bottom-right": "fixed bottom-5 right-5",
+    "top-right": "fixed top-5 right-5",
+    static: "", // For manual layout usage (no positioning)
+  };
+
   return (
-    <button
-      onClick={toggleTheme}
-      className="w-12 h-6 flex items-center rounded-full bg-zinc-300 dark:bg-pink-600 p-1 transition-colors duration-300"
-      aria-label="Toggle dark mode"
-    >
-      <div
-        className={`w-4 h-4 rounded-full bg-white dark:bg-black shadow transform transition-transform duration-300 ${
-          isDark ? "translate-x-6" : ""
-        }`}
-      />
-    </button>
+    <div className={positions[position] + " z-50"}>
+      <button
+        onClick={toggleTheme}
+        className="w-12 h-6 flex items-center rounded-full bg-zinc-300 dark:bg-pink-600 p-1 transition-colors duration-300"
+        aria-label="Toggle dark mode"
+      >
+        <div
+          className={`w-4 h-4 rounded-full bg-white dark:bg-black shadow transform transition-transform duration-300 ${
+            isDark ? "translate-x-6" : "translate-x-0"
+          }`}
+        />
+      </button>
+    </div>
   );
 }

@@ -110,10 +110,6 @@ export default {
       boxShadow: {
         soft: "0 2px 15px -3px rgba(0, 0, 0, 0.07), 0 10px 20px -2px rgba(0, 0, 0, 0.04)",
       },
-      animation: {
-        "fade-in": "fadeIn 0.5s ease-in-out",
-        "slide-up": "slideUp 0.5s ease-in-out",
-      },
       keyframes: {
         fadeIn: {
           "0%": { opacity: "0" },
@@ -123,6 +119,20 @@ export default {
           "0%": { transform: "translateY(20px)", opacity: "0" },
           "100%": { transform: "translateY(0)", opacity: "1" },
         },
+        fadeInUp: {
+          "0%": { opacity: 0, transform: "translateY(20px)" },
+          "100%": { opacity: 1, transform: "translateY(0)" },
+        },
+        pulseSlow: {
+          "0%, 100%": { boxShadow: "0 0 0 0 rgba(255,255,255,0.4)" },
+          "50%": { boxShadow: "0 0 0 5px rgba(255,255,255,0)" },
+        },
+      },
+      animation: {
+        "fade-in": "fadeIn 0.5s ease-in-out",
+        "slide-up": "slideUp 0.5s ease-in-out",
+        "fade-in-up": "fadeInUp 0.6s ease-out",
+        "pulse-slow": "pulseSlow 2s ease-in-out infinite",
       },
     },
     screens: {
