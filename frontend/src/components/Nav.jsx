@@ -1,6 +1,15 @@
 import { useState } from "react";
 import { Link, useLocation } from "react-router-dom";
-import { FaHome, FaBook, FaHeart, FaRoad } from "react-icons/fa";
+import {
+  FaHome,
+  FaBook,
+  FaHeart,
+  FaRoad,
+  FaStar,
+  FaQuestionCircle,
+  FaUserAlt,
+  FaShieldAlt,
+} from "react-icons/fa";
 import { MenuIcon, XIcon } from "lucide-react";
 import ThemeToggle from "./ThemeToggle";
 
@@ -16,11 +25,14 @@ export default function Nav() {
     }`;
 
   return (
-    <nav className="w-full max-w-5xl mx-auto px-4 py-3 mb-6 bg-white/60 dark:bg-zinc-900/50 backdrop-blur-md rounded-2xl shadow-md flex items-center justify-between">
+    <nav className="w-full max-w-5xl mx-auto px-4 py-3 mb-6 bg-white/60 dark:bg-zinc-900/50 backdrop-blur-md rounded-2xl shadow-md flex items-center justify-between relative">
       <div className="text-lg font-bold text-zinc-900 dark:text-white">
-        suvie
+        <a href="/" className="flex items-center gap-2">
+          suvie
+        </a>
       </div>
 
+      {/* Desktop Nav */}
       <div className="hidden md:flex gap-2 items-center">
         <Link to="/" className={navItemClass("/")}>
           <FaHome /> Home
@@ -34,10 +46,25 @@ export default function Nav() {
         <Link to="/roadmap" className={navItemClass("/roadmap")}>
           <FaRoad /> Roadmap
         </Link>
+        <Link to="/features" className={navItemClass("/features")}>
+          <FaStar /> Features
+        </Link>
+        <Link to="/faq" className={navItemClass("/faq")}>
+          <FaQuestionCircle /> FAQ
+        </Link>
+        <Link to="/about" className={navItemClass("/about")}>
+          <FaUserAlt /> About
+        </Link>
+        <Link to="/privacy" className={navItemClass("/privacy")}>
+          <FaShieldAlt /> Privacy
+        </Link>
       </div>
 
-      <div className="flex items-center gap-2">
-        <ThemeToggle />
+      {/* Theme toggle + menu (mobile) */}
+      <div className="flex items-center justify-end gap-2 md:hidden z-20">
+        <div className="rounded-full transition bg-zinc-200 dark:bg-pink-500 text-black dark:text-white">
+          <ThemeToggle />
+        </div>
         <button
           className="md:hidden p-2 rounded-lg hover:bg-zinc-100 dark:hover:bg-zinc-800 transition"
           onClick={() => setIsOpen(!isOpen)}
@@ -52,7 +79,7 @@ export default function Nav() {
 
       {/* Mobile Dropdown */}
       {isOpen && (
-        <div className="absolute top-full left-4 right-4 mt-2 flex flex-col gap-2 bg-white dark:bg-zinc-900 shadow-xl rounded-2xl p-4 z-50 md:hidden">
+        <div className="absolute top-full left-4 right-4 mt-2 flex flex-col gap-2 bg-white dark:bg-zinc-900 shadow-xl rounded-2xl p-4 z-10 md:hidden">
           <Link
             to="/"
             className={navItemClass("/")}
@@ -80,6 +107,34 @@ export default function Nav() {
             onClick={() => setIsOpen(false)}
           >
             <FaRoad /> Roadmap
+          </Link>
+          <Link
+            to="/features"
+            className={navItemClass("/features")}
+            onClick={() => setIsOpen(false)}
+          >
+            <FaStar /> Features
+          </Link>
+          <Link
+            to="/faq"
+            className={navItemClass("/faq")}
+            onClick={() => setIsOpen(false)}
+          >
+            <FaQuestionCircle /> FAQ
+          </Link>
+          <Link
+            to="/about"
+            className={navItemClass("/about")}
+            onClick={() => setIsOpen(false)}
+          >
+            <FaUserAlt /> About
+          </Link>
+          <Link
+            to="/privacy"
+            className={navItemClass("/privacy")}
+            onClick={() => setIsOpen(false)}
+          >
+            <FaShieldAlt /> Privacy
           </Link>
         </div>
       )}
