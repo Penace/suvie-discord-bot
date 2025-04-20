@@ -10,6 +10,18 @@ export default function Footer() {
         GitHub
       </a>{" "}
       •{" "}
+      <a href="/#/docs" className="underline">
+        Docs
+      </a>{" "}
+      •{" "}
+      <a href="/#/support" className="underline">
+        Support
+      </a>{" "}
+      •{" "}
+      <a href="/#/roadmap" className="underline">
+        Roadmap
+      </a>{" "}
+      •{" "}
       <a href="https://ko-fi.com/penace" className="underline text-pink-500">
         Ko-fi
       </a>{" "}
