@@ -13,7 +13,13 @@ export default function DocsPage() {
 
         <nav className="mb-12 text-sm">
           <Link to="/" className="text-blue-500 hover:underline">
-            ← Back to Home
+            ← Back to Home |{" "}
+            <a
+              href="https://github.com/Penace/suvie-discord-bot/blob/main/docs/COMMANDS.md"
+              target="_blank"
+            >
+              View raw markdown →
+            </a>
           </Link>
         </nav>
 

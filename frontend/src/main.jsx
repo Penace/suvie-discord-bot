@@ -1,7 +1,7 @@
 import { StrictMode } from "react";
 import { createRoot } from "react-dom/client";
 import { HashRouter, Routes, Route } from "react-router-dom";
-
+import Footer from "./components/Footer.jsx";
 import LandingPage from "./LandingPage.jsx";
 import DocsPage from "./DocsPage.jsx";
 import KoFiWidget from "./components/KoFiWidget.jsx";
@@ -16,6 +16,7 @@ createRoot(document.getElementById("root")).render(
         <Route path="/docs" element={<DocsPage />} />
       </Routes>
 
+      <Footer />
       <KoFiWidget />
       <ThemeToggle />
     </HashRouter>

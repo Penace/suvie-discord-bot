@@ -35,7 +35,7 @@ export default function LandingPage() {
             View on GitHub
           </a>
           <a
-            href="https://suvie.me/docs"
+            href="https://suvie.me/#/docs"
             className="inline-flex items-center px-5 py-2.5 bg-zinc-800 hover:bg-zinc-700 text-white text-sm font-semibold rounded-full shadow-md transition"
             target="_blank"
             rel="noopener noreferrer"
@@ -104,29 +104,6 @@ export default function LandingPage() {
           </div>
         </section>
       </main>
-
-      {/* Footer */}
-      <footer className="w-full max-w-5xl mt-20 text-center text-sm text-zinc-500 dark:text-zinc-400">
-        © 2025 suvie by{" "}
-        <a href="https://penace.org" className="underline">
-          Penace
-        </a>{" "}
-        •{" "}
-        <a href="https://github.com/Penace/" className="underline">
-          GitHub
-        </a>{" "}
-        •{" "}
-        <a href="https://ko-fi.com/penace" className="underline text-pink-500">
-          Ko-fi
-        </a>{" "}
-        •{" "}
-        <a
-          href="https://www.buymeacoffee.com/penace"
-          className="underline text-yellow-600"
-        >
-          Buy Me a Coffee
-        </a>
-      </footer>
     </div>
   );
 }
