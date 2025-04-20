@@ -20,14 +20,14 @@ jobs:
           node-version: "20"
 
       - name: 🔧 Install Dependencies
-        working-directory: ./frontend
+        working-directory: /frontend
         run: |
           corepack enable
           corepack prepare pnpm@latest --activate
           pnpm install
 
       - name: 📊 Build Frontend
-        working-directory: ./frontend
+        working-directory: /frontend
         run: |
           pnpm run build
 
@@ -35,6 +35,6 @@ jobs:
         uses: peaceiris/actions-gh-pages@v3
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
-          publish_dir: ./frontend/dist
+          publish_dir: /frontend/dist
           publish_branch: gh-pages
           commit_message: "Deploy frontend from GitHub Actions"
