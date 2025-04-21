@@ -1,11 +1,11 @@
-import React from "react";
+import React, { useState } from "react";
 import {
   MessageCircleIcon,
   HeartIcon,
   TerminalIcon,
   BrainIcon,
   EyeIcon,
-  DownloadCloudIcon,
+  TagIcon,
 } from "lucide-react";
 import { FaDiscord, FaCoffee, FaHeart, FaGithub } from "react-icons/fa";
 import Footer from "./components/Footer.jsx";
@@ -13,6 +13,8 @@ import KoFiWidget from "./components/KoFiWidget.jsx";
 import ThemeToggle from "./components/ThemeToggle.jsx";
 
 export default function LandingPage() {
+  const [showMore, setShowMore] = useState(false);
+
   return (
     <div className="min-h-screen flex flex-col items-center justify-between p-6 pb-6 text-zinc-800 dark:text-white bg-gradient-to-b from-zinc-50 to-zinc-200 dark:from-zinc-900 dark:to-zinc-950 transition-colors duration-300">
       {/* Header */}
@@ -68,6 +70,43 @@ export default function LandingPage() {
             Roadmap
           </a>
         </div>
+
+        <div className="mt-3">
+          <button
+            onClick={() => setShowMore(!showMore)}
+            className="text-sm text-zinc-600 dark:text-zinc-400 hover:text-pink-500 transition"
+          >
+            {showMore ? "Hide pages ▲" : "Looking for more? ▼"}
+          </button>
+          {showMore && (
+            <div className="mt-4 flex flex-wrap justify-center gap-3 text-sm">
+              <a
+                href="/#/features"
+                className="underline text-zinc-700 dark:text-zinc-300 hover:text-pink-500"
+              >
+                Features
+              </a>
+              <a
+                href="/#/faq"
+                className="underline text-zinc-700 dark:text-zinc-300 hover:text-pink-500"
+              >
+                FAQ
+              </a>
+              <a
+                href="/#/about"
+                className="underline text-zinc-700 dark:text-zinc-300 hover:text-pink-500"
+              >
+                About
+              </a>
+              <a
+                href="/#/privacy"
+                className="underline text-zinc-700 dark:text-zinc-300 hover:text-pink-500"
+              >
+                Privacy
+              </a>
+            </div>
+          )}
+        </div>
       </header>
 
       {/* Main */}
@@ -111,35 +150,14 @@ export default function LandingPage() {
           />
           <FeatureBox
             icon={<EyeIcon className="h-6 w-6 text-green-500 mx-auto mb-3" />}
-            title="Per-Server Storage"
-            desc="Each server has its own separate library. No data leaks across servers."
+            title="Per-Server Watchlists"
+            desc="Each server keeps its own separate watchlist — perfect for communities."
           />
           <FeatureBox
-            icon={
-              <DownloadCloudIcon className="h-6 w-6 text-yellow-500 mx-auto mb-3" />
-            }
-            title="Auto Backup"
-            desc="Suvie backs up your lists locally so you can restore them anytime."
+            icon={<TagIcon className="h-6 w-6 text-yellow-500 mx-auto mb-3" />}
+            title="More Coming Soon"
+            desc="We're always adding new features. Got ideas? Suggest them on GitHub!"
           />
-        </section>
-
-        {/* Subtle Nav for Extra Pages */}
-        <section className="text-center mt-12 text-sm text-zinc-500 dark:text-zinc-400">
-          <p className="mb-2">Looking for more?</p>
-          <div className="flex flex-wrap justify-center gap-4">
-            <a href="/#/features" className="hover:text-pink-500 transition">
-              Features
-            </a>
-            <a href="/#/faq" className="hover:text-pink-500 transition">
-              FAQ
-            </a>
-            <a href="/#/about" className="hover:text-pink-500 transition">
-              About
-            </a>
-            <a href="/#/privacy" className="hover:text-pink-500 transition">
-              Privacy
-            </a>
-          </div>
         </section>
       </main>
 
