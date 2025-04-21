@@ -5,7 +5,7 @@ import {
   TerminalIcon,
   BrainIcon,
   EyeIcon,
-  TagIcon,
+  DownloadCloudIcon,
 } from "lucide-react";
 import { FaDiscord, FaCoffee, FaHeart, FaGithub } from "react-icons/fa";
 import Footer from "./components/Footer.jsx";
@@ -111,14 +111,35 @@ export default function LandingPage() {
           />
           <FeatureBox
             icon={<EyeIcon className="h-6 w-6 text-green-500 mx-auto mb-3" />}
-            title="Cross-Server Sync"
-            desc="Your watchlist follows you across all servers seamlessly."
+            title="Per-Server Storage"
+            desc="Each server has its own separate library. No data leaks across servers."
           />
           <FeatureBox
-            icon={<TagIcon className="h-6 w-6 text-yellow-500 mx-auto mb-3" />}
-            title="Custom Tags"
-            desc="Add personal tags to organize your movies your way."
+            icon={
+              <DownloadCloudIcon className="h-6 w-6 text-yellow-500 mx-auto mb-3" />
+            }
+            title="Auto Backup"
+            desc="Suvie backs up your lists locally so you can restore them anytime."
           />
+        </section>
+
+        {/* Subtle Nav for Extra Pages */}
+        <section className="text-center mt-12 text-sm text-zinc-500 dark:text-zinc-400">
+          <p className="mb-2">Looking for more?</p>
+          <div className="flex flex-wrap justify-center gap-4">
+            <a href="/#/features" className="hover:text-pink-500 transition">
+              Features
+            </a>
+            <a href="/#/faq" className="hover:text-pink-500 transition">
+              FAQ
+            </a>
+            <a href="/#/about" className="hover:text-pink-500 transition">
+              About
+            </a>
+            <a href="/#/privacy" className="hover:text-pink-500 transition">
+              Privacy
+            </a>
+          </div>
         </section>
       </main>
 
