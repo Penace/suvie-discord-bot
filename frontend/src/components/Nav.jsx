@@ -36,9 +36,9 @@ export default function Nav() {
 
   return (
     <nav className="w-full max-w-6xl mx-auto mb-6 relative z-40 animate-fade-in-up">
-      <div className="flex rounded-2xl shadow-md overflow-hidden">
+      <div className="flex rounded-2xl shadow-md overflow-hidden h-[56px]">
         {/* Logo Section */}
-        <div className="relative z-50 bg-pink-500 text-white px-6 h-full flex items-center rounded-l-2xl transition-all duration-300 transform hover:scale-105">
+        <div className="relative z-50 bg-pink-500 text-white px-6 flex items-center rounded-l-2xl transition-all duration-300 transform hover:scale-105">
           <a href="/" className="text-lg font-bold">
             suvie
           </a>
@@ -46,40 +46,47 @@ export default function Nav() {
 
         {/* Main Nav */}
         <div className="flex-grow px-4 py-3 flex flex-wrap items-center justify-between bg-gradient-to-r from-white/80 to-zinc-100/80 dark:from-zinc-800/70 dark:to-zinc-900/70 backdrop-blur-md">
-          {/* Desktop Nav */}
           {!isMobile && (
             <div className="flex flex-wrap items-center gap-2">
               <Link to="/" className={navItemClass("/")}>
-                <FaHome /> Home
+                {" "}
+                <FaHome /> Home{" "}
               </Link>
               <Link to="/docs" className={navItemClass("/docs")}>
-                <FaBook /> Docs
+                {" "}
+                <FaBook /> Docs{" "}
               </Link>
               <Link to="/support" className={navItemClass("/support")}>
-                <FaHeart /> Support
+                {" "}
+                <FaHeart /> Support{" "}
               </Link>
               <Link to="/roadmap" className={navItemClass("/roadmap")}>
-                <FaRoad /> Roadmap
+                {" "}
+                <FaRoad /> Roadmap{" "}
               </Link>
               <Link to="/features" className={navItemClass("/features")}>
-                <FaStar /> Features
+                {" "}
+                <FaStar /> Features{" "}
               </Link>
               <Link to="/faq" className={navItemClass("/faq")}>
-                <FaQuestionCircle /> FAQ
+                {" "}
+                <FaQuestionCircle /> FAQ{" "}
               </Link>
               <Link to="/about" className={navItemClass("/about")}>
-                <FaUserAlt /> About
+                {" "}
+                <FaUserAlt /> About{" "}
               </Link>
               <Link to="/privacy" className={navItemClass("/privacy")}>
-                <FaShieldAlt /> Privacy
+                {" "}
+                <FaShieldAlt /> Privacy{" "}
               </Link>
             </div>
           )}
 
           {/* Right Utilities */}
-          <div className="flex items-center gap-2 ml-auto relative">
+          <div className="absolute right-4 top-1/2 -translate-y-1/2 flex items-center gap-2">
             <div className="rounded-full transition bg-zinc-200 dark:bg-pink-600 text-black dark:text-white">
-              <ThemeToggle position="" />
+              <ThemeToggle position="inline" />
             </div>
 
             {isMobile && (
@@ -100,7 +107,7 @@ export default function Nav() {
 
       {/* Mobile Dropdown */}
       {isOpen && isMobile && (
-        <div className="mt-2 flex flex-col gap-2 bg-white dark:bg-zinc-900 shadow-xl rounded-2xl p-4 z-50 animate-fade-in-up">
+        <div className="mt-2 flex flex-col gap-2 bg-white dark:bg-zinc-900 shadow-xl rounded-2xl p-4 z-50 animate-slide-down duration-500 ease-out">
           {[
             { path: "/", label: "Home", icon: <FaHome /> },
             { path: "/docs", label: "Docs", icon: <FaBook /> },
