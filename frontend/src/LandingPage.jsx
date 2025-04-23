@@ -6,8 +6,10 @@ import {
   BrainIcon,
   EyeIcon,
   TagIcon,
+  MoreHorizontal,
 } from "lucide-react";
 import { FaDiscord, FaCoffee, FaHeart, FaGithub } from "react-icons/fa";
+import { Link } from "react-router-dom";
 import Footer from "./components/Footer.jsx";
 import KoFiWidget from "./components/KoFiWidget.jsx";
 import ThemeToggle from "./components/ThemeToggle.jsx";
@@ -36,7 +38,6 @@ export default function LandingPage() {
             <FaDiscord className="w-6 h-6 mr-2" />
             Invite to Discord
           </a>
-
           <a
             href="https://github.com/Penace/suvie-discord-bot"
             target="_blank"
@@ -46,14 +47,12 @@ export default function LandingPage() {
             <FaGithub className="w-6 h-6 mr-2" />
             View on GitHub
           </a>
-
           <a
             href="/#/docs"
             className="inline-flex items-center px-5 py-2.5 bg-zinc-800 hover:bg-zinc-700 text-white text-sm font-semibold rounded-full shadow-md hover:shadow-lg transition-all duration-200"
           >
             Read Docs
           </a>
-
           <a
             href="/#/support"
             className="inline-flex items-center px-4 py-2 bg-pink-500 hover:bg-pink-600 text-white text-sm font-semibold rounded-full shadow-md hover:shadow-lg transition-all duration-200"
@@ -61,7 +60,6 @@ export default function LandingPage() {
             <FaHeart className="w-5 h-5 mr-2" />
             Support
           </a>
-
           <a
             href="/#/roadmap"
             className="inline-flex items-center px-4 py-2 bg-yellow-400 hover:bg-yellow-500 text-white text-sm font-semibold rounded-full shadow-md hover:shadow-lg transition-all duration-200"
@@ -69,43 +67,6 @@ export default function LandingPage() {
             <FaCoffee className="w-5 h-5 mr-2" />
             Roadmap
           </a>
-        </div>
-
-        <div className="mt-3">
-          <button
-            onClick={() => setShowMore(!showMore)}
-            className="text-sm text-zinc-600 dark:text-zinc-400 hover:text-pink-500 transition"
-          >
-            {showMore ? "Hide pages ▲" : "Looking for more? ▼"}
-          </button>
-          {showMore && (
-            <div className="mt-4 flex flex-wrap justify-center gap-3 text-sm">
-              <a
-                href="/#/features"
-                className="underline text-zinc-700 dark:text-zinc-300 hover:text-pink-500"
-              >
-                Features
-              </a>
-              <a
-                href="/#/faq"
-                className="underline text-zinc-700 dark:text-zinc-300 hover:text-pink-500"
-              >
-                FAQ
-              </a>
-              <a
-                href="/#/about"
-                className="underline text-zinc-700 dark:text-zinc-300 hover:text-pink-500"
-              >
-                About
-              </a>
-              <a
-                href="/#/privacy"
-                className="underline text-zinc-700 dark:text-zinc-300 hover:text-pink-500"
-              >
-                Privacy
-              </a>
-            </div>
-          )}
         </div>
       </header>
 
@@ -150,14 +111,47 @@ export default function LandingPage() {
           />
           <FeatureBox
             icon={<EyeIcon className="h-6 w-6 text-green-500 mx-auto mb-3" />}
-            title="Per-Server Watchlists"
-            desc="Each server keeps its own separate watchlist — perfect for communities."
+            title="Per Server Sync"
+            desc="Each server tracks its own lists, keeping data scoped and private."
           />
           <FeatureBox
             icon={<TagIcon className="h-6 w-6 text-yellow-500 mx-auto mb-3" />}
-            title="More Coming Soon"
-            desc="We're always adding new features. Got ideas? Suggest them on GitHub!"
+            title="Simple Sorting"
+            desc="Sort by name, year, or genre (custom tags coming soon!)."
           />
+        </section>
+
+        <section className="text-center mt-6">
+          <button
+            onClick={() => setShowMore(!showMore)}
+            className="inline-flex items-center px-4 py-2 rounded-full bg-zinc-200 hover:bg-zinc-300 dark:bg-zinc-700 dark:hover:bg-zinc-600 text-sm font-medium transition-all"
+          >
+            <MoreHorizontal className="w-4 h-4 mr-2" />
+            {showMore ? "Hide pages" : "More..."}
+          </button>
+
+          {showMore && (
+            <div className="mt-4 grid grid-cols-2 md:grid-cols-4 gap-3 text-sm text-zinc-700 dark:text-zinc-300 transition-all animate-fade-in">
+              {[
+                ["About", "/#/about"],
+                ["Changelog", "/#/changelog"],
+                ["Docs", "/#/docs"],
+                ["FAQ", "/#/faq"],
+                ["Features", "/#/features"],
+                ["Privacy", "/#/privacy"],
+                ["Roadmap", "/#/roadmap"],
+                ["Support", "/#/support"],
+              ].map(([label, href]) => (
+                <a
+                  key={label}
+                  href={href}
+                  className="hover:text-pink-500 transition"
+                >
+                  {label}
+                </a>
+              ))}
+            </div>
+          )}
         </section>
       </main>
 
