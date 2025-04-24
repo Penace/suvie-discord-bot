@@ -12,7 +12,7 @@ export default function KoFiWidget() {
       if (window.kofiWidgetOverlay) {
         window.kofiWidgetOverlay.draw("penace", {
           type: "floating-chat",
-          // "floating-chat.donateButton.text": "💖",
+          "floating-chat.donateButton.text": "",
           "floating-chat.donateButton.background-color": "#FF5E5B",
           "floating-chat.donateButton.text-color": "#ffffff",
           mb: "25px",

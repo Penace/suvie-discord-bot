@@ -11,6 +11,7 @@ import FAQPage from "./FAQPage.jsx";
 import AboutPage from "./AboutPage.jsx";
 import PrivacyPage from "./PrivacyPage.jsx";
 import ChangelogPage from "./ChangelogPage.jsx";
+import SetupPage from "./SetupPage.jsx";
 
 import "./index.css";
 
@@ -30,6 +31,7 @@ createRoot(document.getElementById("root")).render(
         <Route path="/about" element={<AboutPage />} />
         <Route path="/privacy" element={<PrivacyPage />} />
         <Route path="/changelog" element={<ChangelogPage />} />
+        <Route path="/setup" element={<SetupPage />} />
       </Routes>
     </HashRouter>
   </StrictMode>

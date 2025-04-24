@@ -31,11 +31,7 @@ export default function DocsPage() {
           <a href="#support" className="text-blue-500 hover:underline">
             Support
           </a>
-          <a
-            href="https://github.com/Penace/suvie-discord-bot/blob/main/docs/COMMANDS.md"
-            target="_blank"
-            className="text-blue-500 hover:underline"
-          >
+          <a href="#commands" className="text-blue-500 hover:underline">
             Commands
           </a>
         </nav>
